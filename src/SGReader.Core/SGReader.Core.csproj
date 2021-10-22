@@ -42,6 +42,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SGFile.cs" />
+    <Compile Include="SGHeader.cs" />
+    <Compile Include="SGImage.cs" />
     <Compile Include="SGLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TextHelper.cs" />

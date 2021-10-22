@@ -10,7 +10,9 @@ namespace SGReader.Core
     {
         public SGFile Load(string filePath)
         {
-            return new SGFile(filePath);
+            var sgFile = new SGFile(filePath);
+            sgFile.Load();
+            return sgFile;
         }
     }
 }
