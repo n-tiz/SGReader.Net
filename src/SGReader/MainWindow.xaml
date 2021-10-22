@@ -65,14 +65,58 @@
                 <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                     <materialDesign:PackIcon HorizontalAlignment="Center"
                                              VerticalAlignment="Center"
-                                             Kind="PalmTree" Height="24" Width="24" />
+                                             Kind="PalmTree" Height="32" Width="32" />
                     <TextBlock
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        FontSize="22"
+                        FontSize="26"
                         Text="SGReader.Net" />
-                 </StackPanel>
+                </StackPanel>
             </Grid>
         </materialDesign:ColorZone>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="200" MaxWidth="400" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="3*" />
+            </Grid.ColumnDefinitions>
+            <ListView HorizontalAlignment="Stretch"
+                      ItemsSource="{Binding LoadedFiles}"
+                      SelectedItem="{Binding SelectedSGFile}"
+                      Grid.ColumnSpan="1" SelectionMode="Single">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:SGFileViewModel}">
+                        <Border
+                            x:Name="Border"
+                            Padding="8"
+                            BorderThickness="0 0 0 1"
+                            BorderBrush="{DynamicResource MaterialDesignDivider}">
+                            <Grid>
+                                <StackPanel
+                                    Margin="8 0 0 0">
+                                    <TextBlock
+                                        Text="{Binding Name}"
+                                        FontWeight="Bold" />
+                                    <TextBlock
+                                        Text="{Binding Description}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ListView>
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
+            <TextBlock Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"
+                       Opacity="0.7">
+                No file selected.
+            </TextBlock>
+            <local:SGFileView DataContext="{Binding SelectedSGFile}" Grid.Column="2" Margin="10"
+                              Visibility="{Binding Converter={StaticResource NullableToVisibilityConverter}}" />
+        </Grid>
     </DockPanel>
 </Window>
