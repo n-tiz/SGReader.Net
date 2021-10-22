@@ -54,9 +54,9 @@ namespace SGReader
 
         private void OpenFile(string filePath)
         {
-            var loader = new SGLoader();
-            var sg = loader.Load(filePath);
-            LoadedFiles.Add(new SGFileViewModel(sg));
+            var sgFile = new SGFile(filePath);
+            sgFile.Load();
+            LoadedFiles.Add(new SGFileViewModel(sgFile));
         }
 
         public ObservableCollection<SGFileViewModel> LoadedFiles { get; } = new ObservableCollection<SGFileViewModel>();

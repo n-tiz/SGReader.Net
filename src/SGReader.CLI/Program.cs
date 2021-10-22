@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using SGReader.Core;
 
 namespace SGReader.CLI
@@ -14,8 +10,8 @@ namespace SGReader.CLI
             if (args.Length == 1)
             {
                 string fileName = args.SingleOrDefault();
-                var loader = new SGLoader();
-                loader.Load(fileName);
+                var sgFile = new SGFile(fileName);
+                sgFile.Load();
             }
         }
     }
