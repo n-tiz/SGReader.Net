@@ -348,3 +348,5 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+src/SGReader/Properties/Settings.Designer.cs
+src/SGReader/Properties/Resources.Designer.cs
