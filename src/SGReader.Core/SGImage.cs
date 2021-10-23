@@ -1,8 +1,10 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Windows.Controls;
 
 namespace SGReader.Core
 {
-    public class SGImage
+    public class SGImage : IDisposable
     {
         private SGImageData _workData;
         private SGImageData _data;
@@ -21,6 +23,16 @@ namespace SGReader.Core
             _workData = new SGImageData(reader, includeAlpha);
             _data = _workData;
             IsInverted = _data.InvertOffset != 0;
+        }
+
+        public void Dispose()
+        {
+            //todo
+        }
+
+        public Image CreateImage()
+        {
+            throw new NotImplementedException();
         }
     }
 }

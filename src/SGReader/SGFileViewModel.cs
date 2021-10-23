@@ -11,7 +11,7 @@ namespace SGReader
         {
             _sgFile = sgFile;
             Name = _sgFile.Name;
-            Description = $"Images : {_sgFile.ImagesCount}";
+            Description = $"Images : {_sgFile.Images.Count}";
         }
 
         private string _name;

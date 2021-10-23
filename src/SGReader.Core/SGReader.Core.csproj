@@ -31,6 +31,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Exceptions\InvalidSGFileException.cs" />
+    <Compile Include="SGBitmap.cs" />
     <Compile Include="SGBitmapData.cs" />
     <Compile Include="SGFile.cs" />
     <Compile Include="SGHeader.cs" />
@@ -50,6 +52,5 @@
     <Compile Include="SGImageData.cs" />
     <Compile Include="TextHelper.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,27 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Windows.Controls;
+using System.Collections.Generic;
 
 namespace SGReader.Core
 {
-    public class SGFile
+    public class SGFile : IDisposable
     {
         private readonly string _filePath;
         private readonly List<SGBitmap> _bitmaps = new List<SGBitmap>();
         private readonly List<SGImage> _images = new List<SGImage>();
 
-        public string Name => TextHelper.CleanFileName(_filePath);
-        public IReadOnlyCollection<SGBitmap> Bitmaps => _bitmaps;
-        public IReadOnlyCollection<SGImage> Images => _images;
+        public string Name { get; }
+        public IReadOnlyList<SGBitmap> Bitmaps => _bitmaps;
+        public IReadOnlyList<SGImage> Images => _images;
 
-        public int ImagesCount => 42;
         public SGHeader Header { get; private set; }
 
         public SGFile(string filePath)
         {
             _filePath = filePath;
+            Name = TextHelper.CleanFileName(_filePath);
         }
 
         public void Load()
@@ -109,32 +109,78 @@ namespace SGReader.Core
                     return 200; // SG3
             }
         }
-    }
 
-    public class SGBitmap : IDisposable
-    {
-        private readonly string _filePath;
-        List<SGImage> _images = new List<SGImage>();
-
-        public int Id { get; }
-        public SGBitmapData Data { get; }
-        public const int DataSize = 200;
-
-        public SGBitmap(int id, string filePath, BinaryReader reader)
+        public int GetImagesCountForBitmap(int bitmapId)
         {
-            _filePath = filePath;
-            Id = id;
-            Data = new SGBitmapData(reader);
+            if (bitmapId < 0 || bitmapId >= _bitmaps.Count)
+                return -1;
+            return _bitmaps[bitmapId].Images.Count;
+        }
+
+        public SGImage GetImageById(int imageId)
+        {
+            if (imageId < 0 || imageId >= _images.Count)
+            {
+                return null;
+            }
+            return _images[imageId];
+        }
+
+        public SGImage GetImageForBitmap(int bitmapId, int imageId)
+        {
+            if (bitmapId < 0 || bitmapId >= _bitmaps.Count || imageId < 0 || imageId >= _bitmaps[bitmapId].Images.Count)
+            {
+                return null;
+            }
+
+            return _bitmaps[bitmapId].Images[imageId];
+        }
+
+        public Image CreateImage(int imageId)
+        {
+            if (imageId < 0 || imageId >= Images.Count)
+            {
+                return null;
+            }
+            return _images[imageId].CreateImage();
+        }
+        
+        public Image CreateImageForBitmap(int bitmapId, int imageId)
+        {
+            if (bitmapId < 0 || bitmapId >= _bitmaps.Count ||
+                imageId < 0 || imageId >= _bitmaps[bitmapId].Images.Count)
+            {
+                return null;
+            }
+            return _bitmaps[bitmapId].CreateImage(imageId);
+        }
+
+        public SGBitmap GetBitmapById(int bitmapId)
+        {
+            if (bitmapId < 0 || bitmapId >= _bitmaps.Count)
+            {
+                return null;
+            }
+
+            return _bitmaps[bitmapId];
+        }
+
+        public string GetBitmapDescription(int bitmapId)
+        {
+            return GetBitmapById(bitmapId)?.Description;
         }
 
         public void Dispose()
         {
-            
-        }
-
-        public void AddImage(SGImage image)
-        {
-            _images.Add(image);
+            foreach (var bitmap in _bitmaps)
+            {
+                bitmap.Dispose();
+            }
+            _bitmaps.Clear();
+            foreach (var image in _images)
+            {
+                image.Dispose();
+            }
         }
     }
 }
