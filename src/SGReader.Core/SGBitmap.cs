@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Windows.Controls;
 
 namespace SGReader.Core
 {
@@ -43,7 +43,7 @@ namespace SGReader.Core
             return _images[imageId];
         }
 
-        public Image CreateImage(int imageId)
+        public Bitmap CreateImage(int imageId)
         {
             if (imageId < 0 || imageId >= _images.Count)
             {

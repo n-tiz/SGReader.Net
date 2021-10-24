@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SGReader.Core
 {
-    public class SGImageData
+    public class SGImageData : IDisposable
     {
         public SGImageData(BinaryReader reader, bool includeAlpha)
         {
@@ -48,5 +48,10 @@ namespace SGReader.Core
         /* For D6 and up SG3 versions: alpha masks */
         public uint AlphaOffset { get; }
         public uint AlphaLength { get; }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

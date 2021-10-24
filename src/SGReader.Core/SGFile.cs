@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using System.Windows.Controls;
 using System.Collections.Generic;
+using System.Drawing;
+using SGReader.Core.Exceptions;
 
 namespace SGReader.Core
 {
@@ -51,7 +52,7 @@ namespace SGReader.Core
                 int invertOffset = image.InvertOffset;
                 if (invertOffset < 0 && (i + invertOffset) >= 0)
                 {
-                    image.InvertedImage = _images[i + invertOffset];
+                    image.SetInvertedImage(_images[i + invertOffset]);
                 }
 
                 int bitmapId = image.BitmapId;
@@ -136,7 +137,7 @@ namespace SGReader.Core
             return _bitmaps[bitmapId].Images[imageId];
         }
 
-        public Image CreateImage(int imageId)
+        public Bitmap CreateImage(int imageId)
         {
             if (imageId < 0 || imageId >= Images.Count)
             {
@@ -145,7 +146,7 @@ namespace SGReader.Core
             return _images[imageId].CreateImage();
         }
         
-        public Image CreateImageForBitmap(int bitmapId, int imageId)
+        public Bitmap CreateImageForBitmap(int bitmapId, int imageId)
         {
             if (bitmapId < 0 || bitmapId >= _bitmaps.Count ||
                 imageId < 0 || imageId >= _bitmaps[bitmapId].Images.Count)

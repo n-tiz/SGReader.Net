@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SGReader.Core
+namespace SGReader.Core.Exceptions
 {
     internal class InvalidSGFileException : Exception
     {
