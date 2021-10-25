@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using FastBitmapLib;
 using SGReader.Core.Exceptions;
 
 namespace SGReader.Core
@@ -27,6 +27,8 @@ namespace SGReader.Core
         public SGBitmap Parent { get; set; } = null;
         public int InvertOffset => _data.InvertOffset;
         public int BitmapId => _workData?.BitmapId ?? _data.BitmapId;
+        public int Width => _data.Width;
+        public int Height => _data.Height;
 
         public SGImage(int id, BinaryReader reader, bool includeAlpha)
         {
@@ -46,7 +48,6 @@ namespace SGReader.Core
 
         public void Dispose()
         {
-            _data?.Dispose();
             // _workData is deleted by whoever owns it
         }
 
@@ -68,13 +69,9 @@ namespace SGReader.Core
             {
                 throw new InvalidSGImageException("Image has no bitmap parent", this);
             }
-            if (_workData.Width <= 0 || _workData.Height <= 0)
+            if (_workData.Width <= 0 || _workData.Height <= 0 || _workData.Length <= 0)
             {
-                throw new InvalidSGImageException($"Width or height invalid ({_workData.Width}x{_workData.Height})", this);
-            }
-            if (_workData.Length <= 0)
-            {
-                throw new InvalidSGImageException("No image data available", this);
+                return null;
             }
 
             byte[] buffer = FillBuffer();
@@ -84,34 +81,35 @@ namespace SGReader.Core
             }
 
             Bitmap result = new Bitmap(_workData.Width, _workData.Height, PixelFormat.Format32bppArgb);
-
-            switch (_workData.Type)
+            using (var fastBitmap = result.FastLock())
             {
-                case 0:
-                case 1:
-                case 10:
-                case 12:
-                case 13:
-                    LoadPlainImage(result, buffer);
-                    break;
-                case 30:
-                    LoadIsometricImage(result, buffer);
-                    break;
-                case 256:
-                case 257:
-                case 276:
-                    LoadSpriteImage(result, buffer);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException($"Type '{_workData.Type}' is not valid.");
-            }
-            
-            if (_workData.AlphaLength > 0)
-            {
-                byte[] alphaBuffer = buffer.Skip((int) _workData.Length).ToArray();
-                LoadAlphaMask(result, alphaBuffer);
-            }
+                switch (_workData.Type)
+                {
+                    case 0:
+                    case 1:
+                    case 10:
+                    case 12:
+                    case 13:
+                        LoadPlainImage(fastBitmap, buffer);
+                        break;
+                    case 30:
+                        LoadIsometricImage(fastBitmap, buffer);
+                        break;
+                    case 256:
+                    case 257:
+                    case 276:
+                        LoadSpriteImage(fastBitmap, buffer);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException($"Type '{_workData.Type}' is not valid.");
+                }
 
+                if (_workData.AlphaLength > 0)
+                {
+                    byte[] alphaBuffer = buffer.Skip((int) _workData.Length).ToArray();
+                    LoadAlphaMask(fastBitmap, alphaBuffer);
+                }
+            }
             if (IsInverted)
             {
                 result.RotateFlip(RotateFlipType.RotateNoneFlipX);
@@ -121,7 +119,7 @@ namespace SGReader.Core
 
         private byte[] FillBuffer()
         {
-            var file = Parent.OpenFile(IsInverted);
+            var file = Parent.OpenFile(_workData.Flags[0] != 0);
             if (file == null)
             {
                 throw new InvalidSGImageException("Unable to open 555 file", this);
@@ -152,7 +150,7 @@ namespace SGReader.Core
             return buffer;
         }
 
-        private void LoadPlainImage(Bitmap result, byte[] buffer)
+        private void LoadPlainImage(FastBitmap result, byte[] buffer)
         {
             // Check whether the image data is OK
             if (_workData.Height * _workData.Width * 2 != (int)_workData.Length)
@@ -168,18 +166,18 @@ namespace SGReader.Core
             }
         }
 
-        private void LoadIsometricImage(Bitmap result, byte[] buffer)
+        private void LoadIsometricImage(FastBitmap result, byte[] buffer)
         {
             WriteIsometricBase(result, buffer);
             WriteTransparentImage(result, buffer.Skip((int) _workData.UncompressedLength).ToArray(), _workData.Length - _workData.UncompressedLength);
         }
 
-        private void LoadSpriteImage(Bitmap result, byte[] buffer)
+        private void LoadSpriteImage(FastBitmap result, byte[] buffer)
         {
             WriteTransparentImage(result, buffer, _workData.Length);
         }
         
-        private void LoadAlphaMask(Bitmap result, byte[] alphaBuffer)
+        private void LoadAlphaMask(FastBitmap result, byte[] alphaBuffer)
         {
             int i = 0;
             int x = 0, y = 0, j;
@@ -214,7 +212,7 @@ namespace SGReader.Core
             }
         }
 
-        private void WriteIsometricBase(Bitmap result, byte[] buffer)
+        private void WriteIsometricBase(FastBitmap result, byte[] buffer)
         {
             int size = _workData.Flags[3];
             int tileBytes, tileHeight, tileWidth;
@@ -283,7 +281,7 @@ namespace SGReader.Core
             }
         }
 
-        private void WriteIsometricTile(Bitmap result, byte[] buffer, int xOffset, int yOffset, int tileWidth, int tileHeight)
+        private void WriteIsometricTile(FastBitmap result, byte[] buffer, int xOffset, int yOffset, int tileWidth, int tileHeight)
         {
             int halfHeight = tileHeight / 2;
             int x, y, i = 0;
@@ -310,7 +308,7 @@ namespace SGReader.Core
             }
         }
 
-        private void WriteTransparentImage(Bitmap result, byte[] buffer, uint length)
+        private void WriteTransparentImage(FastBitmap result, byte[] buffer, uint length)
         {
             int i = 0;
             int x = 0, y = 0, j;
@@ -344,7 +342,7 @@ namespace SGReader.Core
             }
         }
 
-        private void Set555Pixel(Bitmap result, int x, int y, ushort color)
+        private void Set555Pixel(FastBitmap result, int x, int y, ushort color)
         {
             if (color == 0xf81f)
             {
@@ -365,7 +363,7 @@ namespace SGReader.Core
             result.SetPixel(x, y, Color.FromArgb(rgb));
         }
 
-        private void SetAlphaPixel(Bitmap result, int x, int y, byte color)
+        private void SetAlphaPixel(FastBitmap result, int x, int y, byte color)
         {
             /* Only the first five bits of the alpha channel are used */
             byte alpha = (byte) (((color & 0x1f) << 3) | ((color & 0x1c) >> 2));
@@ -376,4 +374,59 @@ namespace SGReader.Core
 
 
     }
+
+    //public class FastBitmap : IDisposable
+    //{
+    //    private readonly Bitmap _bitmap;
+    //    private BitmapData _data;
+
+    //    public int Width { get; }
+
+    //    public int Height { get; }
+
+    //    public FastBitmap(Bitmap bitmap)
+    //    {
+    //        _bitmap = bitmap;
+    //        Width = bitmap.Width;
+    //        Height = bitmap.Height;
+
+    //        _data = _bitmap.LockBits(new Rectangle(0, 0, _bitmap.Width, _bitmap.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+    //    }
+
+    //    public void SetPixel(int x, int y, Color color)
+    //    {
+    //        int stride = _data.Stride;
+    //        unsafe
+    //        {
+    //            byte* ptr = (byte*)_data.Scan0;
+    //            ptr[(x * 3) + y * stride] = color.B;
+    //            ptr[(x * 3) + y * stride + 1] = color.G;
+    //            ptr[(x * 3) + y * stride + 2] = color.R;
+    //        }
+    //    }
+
+    //    public Color GetPixel(int x, int y)
+    //    {
+    //        int stride = _data.Stride;
+    //        byte r, g, b, a = 0;
+    //        unsafe
+    //        {
+    //            byte* ptr = (byte*)_data.Scan0;
+    //           b = ptr[(x * 3) + y * stride];
+    //           g = ptr[(x * 3) + y * stride + 1];
+    //           r= ptr[(x * 3) + y * stride + 2];
+    //        }
+    //        return Color.FromArgb(a,r,g,b);
+    //    }
+
+    //    public void RotateFlip(RotateFlipType flipType)
+    //    {
+    //      //  _bitmap.RotateFlip(flipType);
+    //    }
+
+    //    public void Dispose()
+    //    {
+    //        _bitmap.UnlockBits(_data);
+    //    }
+    //}
 }

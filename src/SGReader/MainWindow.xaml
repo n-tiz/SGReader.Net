@@ -13,6 +13,7 @@
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="Auto"
         Background="{DynamicResource MaterialDesignPaper}"
+        x:Name="Root"
         FontFamily="{DynamicResource MaterialDesignFont}" d:DataContext="{d:DesignInstance local:MainWindowViewModel}">
 
     <DockPanel>
@@ -105,6 +106,14 @@
                                     <TextBlock
                                         Text="{Binding Description}" />
                                 </StackPanel>
+                                <Button
+                                    HorizontalAlignment="Right"
+                                    Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                    ToolTip="Close"
+                                    Command="{Binding DataContext.CloseCommand, ElementName=Root}"
+                                    CommandParameter="{Binding}">
+                                    <materialDesign:PackIcon Kind="Close" />
+                                </Button>
                             </Grid>
                         </Border>
                     </DataTemplate>

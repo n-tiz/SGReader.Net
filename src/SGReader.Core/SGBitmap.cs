@@ -20,6 +20,7 @@ namespace SGReader.Core
         public IReadOnlyList<SGImage> Images => _images;
         public string Description { get; }
         public string Name { get; }
+        public string FileName => Data.FileName;
 
         public SGBitmap(int id, string sgFilePath, BinaryReader reader)
         {
@@ -34,6 +35,7 @@ namespace SGReader.Core
         public void AddImage(SGImage image)
         {
             _images.Add(image);
+            image.Parent = this;
         }
 
         public SGImage GetImageById(int imageId)
@@ -99,7 +101,7 @@ namespace SGReader.Core
         private string FindFilenameCaseInsensitive(DirectoryInfo directory, string filename)
         {
             filename = filename.ToLowerInvariant();
-            var file = directory.GetFiles().SingleOrDefault(f => f.Name.ToLowerInvariant() == filename);
+            var file = directory.GetFiles().SingleOrDefault(f => f.FullName.ToLowerInvariant() == filename);
             return file?.FullName;
         }
 

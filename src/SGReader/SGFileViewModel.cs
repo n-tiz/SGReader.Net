@@ -1,9 +1,11 @@
-﻿using GalaSoft.MvvmLight;
+﻿using System;
+using System.Collections.ObjectModel;
+using GalaSoft.MvvmLight;
 using SGReader.Core;
 
 namespace SGReader
 {
-    public class SGFileViewModel : ViewModelBase
+    public class SGFileViewModel : ViewModelBase, IDisposable
     {
         private readonly SGFile _sgFile;
 
@@ -12,7 +14,14 @@ namespace SGReader
             _sgFile = sgFile;
             Name = _sgFile.Name;
             Description = $"Images : {_sgFile.Images.Count}";
+
+            foreach (var image in sgFile.Images)
+            {
+                Images.Add(new SGImageViewModel(image));
+            }
         }
+
+        public ObservableCollection<SGImageViewModel> Images { get; } = new ObservableCollection<SGImageViewModel>();
 
         private string _name;
 
@@ -40,18 +49,9 @@ namespace SGReader
             }
         }
 
-        private bool _isSelected;
-
-        public bool IsSelected
+        public void Dispose()
         {
-            get { return _isSelected; }
-            set
-            {
-                if (_isSelected == value) return;
-                _isSelected = value;
-                RaisePropertyChanged();
-            }
+            _sgFile?.Dispose();
         }
-
     }
 }

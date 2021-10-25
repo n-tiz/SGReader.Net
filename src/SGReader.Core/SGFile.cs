@@ -48,21 +48,26 @@ namespace SGReader.Core
 
             for (int i = 0; i < Header.ImageDataCount; i++)
             {
-                SGImage image = new SGImage(i + 1, reader, includeAlpha);
-                int invertOffset = image.InvertOffset;
-                if (invertOffset < 0 && (i + invertOffset) >= 0)
-                {
-                    image.SetInvertedImage(_images[i + invertOffset]);
-                }
-
-                int bitmapId = image.BitmapId;
-                if (bitmapId >= 0 && bitmapId < _bitmaps.Count)
-                {
-                    _bitmaps[bitmapId].AddImage(image);
-                    image.Parent = _bitmaps[bitmapId];
-                }
+                var image = CreateImage(reader, includeAlpha, i);
                 _images.Add(image);
             }
+        }
+
+        private SGImage CreateImage(BinaryReader reader, bool includeAlpha, int i)
+        {
+            SGImage image = new SGImage(i + 1, reader, includeAlpha);
+            int invertOffset = image.InvertOffset;
+            if (invertOffset < 0 && (i + invertOffset) >= 0)
+            {
+                image.SetInvertedImage(_images[i + invertOffset]);
+            }
+
+            int bitmapId = image.BitmapId;
+            if (bitmapId >= 0 && bitmapId < _bitmaps.Count)
+            {
+                _bitmaps[bitmapId].AddImage(image);
+            }
+            return image;
         }
 
         private void LoadBitmaps(BinaryReader reader)

@@ -81,6 +81,25 @@ namespace SGReader
 
         #endregion  Go to github command
 
+        #region Close image command
+
+        private ICommand _closeCommand;
+
+        public ICommand CloseCommand => _closeCommand ?? (_closeCommand = new RelayCommand<SGFileViewModel>(CloseCommandExecute, CloseCommandCanExecute));
+
+        private bool CloseCommandCanExecute(SGFileViewModel sgFile)
+        {
+            return true;
+        }
+
+        private void CloseCommandExecute(SGFileViewModel sgFile)
+        {
+            LoadedFiles.Remove(sgFile);
+            sgFile.Dispose();
+        }
+
+        #endregion  Close image command
+
         #endregion  Commands
     }
 }
