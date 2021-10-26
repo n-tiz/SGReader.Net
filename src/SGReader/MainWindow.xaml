@@ -15,8 +15,11 @@
         Background="{DynamicResource MaterialDesignPaper}"
         x:Name="Root"
         FontFamily="{DynamicResource MaterialDesignFont}" d:DataContext="{d:DesignInstance local:MainWindowViewModel}">
-
-    <DockPanel>
+    <materialDesign:DialogHost>
+        <materialDesign:DialogHost.DialogContent>
+            <ContentControl />
+        </materialDesign:DialogHost.DialogContent>
+        <DockPanel>
         <materialDesign:ColorZone
             Padding="16"
             materialDesign:ShadowAssist.ShadowDepth="Depth2"
@@ -128,4 +131,5 @@
                               Visibility="{Binding Converter={StaticResource NullableToVisibilityConverter}}" />
         </Grid>
     </DockPanel>
+    </materialDesign:DialogHost>
 </Window>

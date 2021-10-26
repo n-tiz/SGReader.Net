@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows.Input;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using SGReader.Core;
 
@@ -55,7 +57,7 @@ namespace SGReader
         private void OpenFile(string filePath)
         {
             var sgFile = new SGFile(filePath);
-            sgFile.Load();
+            PopupHelper.WaitUntil(() => sgFile.Load(), "Please wait");
             LoadedFiles.Add(new SGFileViewModel(sgFile));
         }
 
