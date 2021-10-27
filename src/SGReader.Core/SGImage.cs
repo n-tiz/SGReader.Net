@@ -135,7 +135,7 @@ namespace SGReader.Core
             // Somehow externals have 1 byte added to their offset
             file.Seek(_workData.Offset - _workData.Flags[0], SeekOrigin.Begin);
 
-            int dataRead = file.Read(buffer,0, dataLength);
+            int dataRead = file.Read(buffer, 0, dataLength);
             if (dataLength != dataRead)
             {
                 if (dataRead + 4 == dataLength && file.Position == file.Length)

@@ -24,5 +24,18 @@ namespace SGReader
         {
             InitializeComponent();
         }
+
+        private void ImagesListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var selectedImages = (DataContext as SGFileViewModel)?.SelectedImages;
+            if (selectedImages != null)
+            {
+                selectedImages.Clear();
+                foreach (var image in (e.Source as ListView).SelectedItems.Cast<SGImageViewModel>())
+                {
+                    selectedImages.Add(image);
+                }
+            }
+        }
     }
 }

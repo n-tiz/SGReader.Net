@@ -85,12 +85,20 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Animations\AnimationPlayerView.xaml.cs">
+      <DependentUpon>AnimationPlayerView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Animations\AnimationPlayerViewModel.cs" />
     <Compile Include="Helpers\PopupHelper.cs" />
     <Compile Include="SGFileView.xaml.cs">
       <DependentUpon>SGFileView.xaml</DependentUpon>
     </Compile>
     <Compile Include="SGFileViewModel.cs" />
     <Compile Include="SGImageViewModel.cs" />
+    <Page Include="Animations\AnimationPlayerView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

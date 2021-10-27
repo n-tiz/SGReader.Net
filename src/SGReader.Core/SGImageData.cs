@@ -14,7 +14,10 @@ namespace SGReader.Core
             InvertOffset = reader.ReadInt32();
             Width = reader.ReadInt16();
             Height = reader.ReadInt16();
-            reader.BaseStream.Seek(26, SeekOrigin.Current); //Skip 26 bytes
+            reader.BaseStream.Seek(10, SeekOrigin.Current); //Skip 10 bytes
+            XOffset = reader.ReadInt16();
+            YOffset = reader.ReadInt16();
+            reader.BaseStream.Seek(12, SeekOrigin.Current); //Skip 12 bytes
             Type = reader.ReadUInt16();
             Flags = Array.ConvertAll(reader.ReadBytes(4), b => (sbyte) b);
             BitmapId = reader.ReadByte();
@@ -39,6 +42,8 @@ namespace SGReader.Core
         public int InvertOffset { get; }
         public short Width { get; }
         public short Height { get; }
+        public short XOffset { get; }
+        public short YOffset { get; }
         /* 26 unknown bytes, mostly zero, first four are 2 shorts */
         public ushort Type { get; }
         /* 4 flag/option-like bytes: */

@@ -5,7 +5,9 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
+using SGReader.Animations;
 using SGReader.Core;
+using SGReader.Helpers;
 
 namespace SGReader
 {

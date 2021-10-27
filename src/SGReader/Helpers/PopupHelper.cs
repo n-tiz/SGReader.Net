@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SGReader
+namespace SGReader.Helpers
 {
     internal static class PopupHelper
     {

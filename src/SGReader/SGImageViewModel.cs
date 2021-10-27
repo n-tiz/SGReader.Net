@@ -17,6 +17,7 @@ namespace SGReader
         public string Group => _image.Parent.FileName;
         public string Description => _image.Description;
         public string FullDescription => _image.FullDescription;
+        public int Id => _image.Id;
 
         public SGImageViewModel(SGImage image)
         {

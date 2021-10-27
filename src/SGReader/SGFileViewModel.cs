@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using GalaSoft.MvvmLight;
+using SGReader.Animations;
 using SGReader.Core;
 
 namespace SGReader
@@ -19,9 +20,13 @@ namespace SGReader
             {
                 Images.Add(new SGImageViewModel(image));
             }
+            AnimationPlayer = new AnimationPlayerViewModel(SelectedImages);
         }
 
+        public AnimationPlayerViewModel AnimationPlayer { get; }
+
         public ObservableCollection<SGImageViewModel> Images { get; } = new ObservableCollection<SGImageViewModel>();
+        public ObservableCollection<SGImageViewModel> SelectedImages { get; } = new ObservableCollection<SGImageViewModel>();
 
         private string _name;
 
