@@ -53,17 +53,6 @@ namespace SGReader.Core
 
         public Bitmap CreateImage()
         {
-            // START DEBUG ((
-            /*
-            if ((imageId >= 359 && imageId <= 368) || imageId == 459) {
-                qDebug("Record %d", imageId);
-                qDebug("  offet %d; length %d; length2 %d", record->offset, record->length, record->uncompressed_length);
-                qDebug("  invert %d; width %d; height %d", record->invert_offset, record->width, record->height);
-                qDebug("  type %d; flags %d %d %d %d; bitmap %d", record->type,
-                    record->flags[0], record->flags[1], record->flags[2], record->flags[3], record->bitmap_id);
-            }
-            */
-            // END DEBUG ))
             // Trivial checks
             if (Parent == null)
             {
@@ -359,6 +348,12 @@ namespace SGReader.Core
 
             // Blue: bits 1-5, should go to bits 1-8
             rgb |= ((color & 0x1f) << 3) | ((color & 0x1c) >> 2);
+
+            // Transform red to transparent black (for shadows).
+            if (rgb == unchecked((int)0xffff0000))
+            {
+                rgb = unchecked((int)0x88000000);
+            }
 
             result.SetPixel(x, y, Color.FromArgb(rgb));
         }

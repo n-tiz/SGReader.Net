@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SGReader
 {
@@ -25,8 +14,12 @@ namespace SGReader
             InitializeComponent();
         }
 
+        private bool _isDataContextChanging = false;
+
         private void ImagesListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isDataContextChanging) return;
+
             var selectedImages = (DataContext as SGFileViewModel)?.SelectedImages;
             if (selectedImages != null)
             {
@@ -36,6 +29,23 @@ namespace SGReader
                     selectedImages.Add(image);
                 }
             }
+        }
+
+        private void ImagesListView_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            _isDataContextChanging = true;
+               var selectedImages = (DataContext as SGFileViewModel)?.SelectedImages;
+            if (selectedImages != null)
+            {
+                (sender as ListView).SelectedItems.Clear();
+                foreach (var image in selectedImages)
+                {
+                    (sender as ListView).SelectedItems.Add(image);
+                }
+            }
+
+            _isDataContextChanging = false;
+
         }
     }
 }

@@ -26,7 +26,7 @@
             <TextBlock Text="{Binding ElementName=ImagesListView, Path=SelectedItem.FullDescription}" />
         </Border>
         <Grid>
-            <ListView x:Name="ImagesListView" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="ImagesListView_OnSelectionChanged"
+            <ListView x:Name="ImagesListView" DataContextChanged="ImagesListView_OnDataContextChanged" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="ImagesListView_OnSelectionChanged"
                       ItemsSource="{Binding Images}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
