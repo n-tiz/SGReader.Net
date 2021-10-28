@@ -47,9 +47,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\BinaryReaderExtensions.cs" />
     <Compile Include="Bitmaps\DirectBitmap.cs" />
     <Compile Include="Exceptions\InvalidSGFileException.cs" />
     <Compile Include="Exceptions\InvalidSGImageException.cs" />
+    <Compile Include="SGAnimation.cs" />
+    <Compile Include="SGAnimationFactory.cs" />
     <Compile Include="SGBitmap.cs" />
     <Compile Include="SGBitmapData.cs" />
     <Compile Include="SGFile.cs" />
@@ -66,5 +69,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

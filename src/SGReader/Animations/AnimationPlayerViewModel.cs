@@ -11,7 +11,6 @@ namespace SGReader.Animations
 {
     public class AnimationPlayerViewModel : ViewModelBase
     {
-        private readonly ObservableCollection<SGImageViewModel> _sprites;
         public double MinimumFrame => 0.01;
         public double MaximumFrame => 0.1;
         public double TickFrequency => 0.01;
@@ -42,27 +41,17 @@ namespace SGReader.Animations
             }
         }
 
-        public AnimationPlayerViewModel(ObservableCollection<SGImageViewModel> sprites)
+        public AnimationPlayerViewModel()
         {
-            _sprites = sprites;
             _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(60), DispatcherPriority.Render, TimerCallback, App.Current.Dispatcher);
             _timer.Start();
             _start = DateTime.Now;
         }
 
+        public SGAnimationViewModel Animation { get; set; }
+
         private void TimerCallback(object sender, EventArgs e)
         {
-        //    _currentFrameIndex++;
-        //    if (_currentFrameIndex >= Animation.Frames.Count)
-        //    {
-        //        _currentFrameIndex = 0;
-        //    }
-
-        //    Frame = Animation.Frames.ElementAt(_currentFrameIndex);
-        //}
-
-        //void timer_Tick(object sender, EventArgs e)
-        //{
             if (IsPlaying)
                 RaisePropertyChanged(nameof(CurrentSprite));
         }
@@ -73,12 +62,12 @@ namespace SGReader.Animations
         {
             get
             {
-                var count = _sprites.Count;
+                var count = Animation?.Sprites.Count ?? 0;
                 if (count == 0) return null;
                 double fullTime = count * Frame;
                 var elapsedTime = (DateTime.Now - _start).TotalSeconds % fullTime;
                 var index = (int)(count * (elapsedTime / fullTime));
-                return _sprites.ElementAt(index);
+                return Animation.Sprites.ElementAt(index);
             }
         }
 
@@ -97,7 +86,6 @@ namespace SGReader.Animations
         }
 
         private ICommand _pauseCommand;
-
 
         public ICommand PauseCommand => _pauseCommand ?? (_pauseCommand = new RelayCommand(PauseCommandExecute, PauseCommandCanExecute));
 

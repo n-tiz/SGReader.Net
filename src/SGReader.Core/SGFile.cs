@@ -12,10 +12,13 @@ namespace SGReader.Core
         private readonly string _filePath;
         private readonly List<SGBitmap> _bitmaps = new List<SGBitmap>();
         private readonly List<SGImage> _images = new List<SGImage>();
+        private readonly List<SGAnimation> _animations = new List<SGAnimation>();
 
         public string Name { get; }
 
         public IReadOnlyList<SGImage> Images => _images;
+
+        public IReadOnlyList<SGAnimation> Animations => _animations;
 
         public SGHeader Header { get; private set; }
 
@@ -42,8 +45,18 @@ namespace SGReader.Core
                 LoadBitmaps(reader);
                 fileStream.Seek(SGHeader.HeaderSize + SGIndex.IndexSize + GetMaxBitmapDataCount(Header.Version) * SGBitmap.DataSize, SeekOrigin.Begin);
                 LoadImages(reader, Header.Version >= SGFileVersion.SG3FormatWithAlphaMask);
+                LoadAnimations();
             }
         }
+
+        private void LoadAnimations()
+        {
+            foreach (var bitmap in _bitmaps)
+            {
+                _animations.AddRange(SGAnimationFactory.BuildAnimations(bitmap));
+            }
+        }
+
 
         private void LoadImages(BinaryReader reader, bool includeAlpha)
         {

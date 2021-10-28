@@ -118,5 +118,6 @@ namespace SGReader.Core
             CloseFileStream();
         }
 
+    
     }
 }

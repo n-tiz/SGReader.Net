@@ -90,6 +90,7 @@
     </Compile>
     <Compile Include="Animations\AnimationPlayerViewModel.cs" />
     <Compile Include="Helpers\PopupHelper.cs" />
+    <Compile Include="SGAnimationViewModel.cs" />
     <Compile Include="SGFileView.xaml.cs">
       <DependentUpon>SGFileView.xaml</DependentUpon>
     </Compile>

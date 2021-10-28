@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using SGReader.Core.Helpers;
 
 namespace SGReader.Core
 {
@@ -10,18 +11,27 @@ namespace SGReader.Core
             Offset = reader.ReadUInt32();
             Length = reader.ReadUInt32();
             UncompressedLength = reader.ReadUInt32();
-            reader.BaseStream.Seek(4, SeekOrigin.Current); //Skip 4 bytes
+            reader.Skip(4);
             InvertOffset = reader.ReadInt32();
             Width = reader.ReadInt16();
             Height = reader.ReadInt16();
-            reader.BaseStream.Seek(10, SeekOrigin.Current); //Skip 10 bytes
+            reader.Skip(6);
+            NumberOfAnimationSprites = reader.ReadUInt16();
+            NumberOfOrientations = reader.ReadUInt16();
             XOffset = reader.ReadInt16();
             YOffset = reader.ReadInt16();
-            reader.BaseStream.Seek(12, SeekOrigin.Current); //Skip 12 bytes
-            Type = reader.ReadUInt16();
-            Flags = Array.ConvertAll(reader.ReadBytes(4), b => (sbyte) b);
+            reader.Skip(10);
+            IsAnimationReversible = Convert.ToBoolean(reader.ReadByte());
+            reader.Skip(1);
+            Type = reader.ReadByte();
+            IsDataFullyCompressed = Convert.ToBoolean(reader.ReadByte());
+            IsDataExternal = Convert.ToBoolean(reader.ReadByte());
+            IsImagePartlyCompressed = Convert.ToBoolean(reader.ReadByte());
+            reader.Skip(2);
             BitmapId = reader.ReadByte();
-            reader.BaseStream.Seek(7, SeekOrigin.Current); //Skip 7 bytes
+            reader.Skip(1);
+            AnimationSpeedId = reader.ReadByte();
+            reader.Skip(5); //Skip 7 bytes
 
             if (includeAlpha)
             {
@@ -35,22 +45,24 @@ namespace SGReader.Core
             }
         }
 
+
         public uint Offset { get; }
         public uint Length { get; }
         public uint UncompressedLength { get; }
-        /* 4 zero bytes: */
         public int InvertOffset { get; }
         public short Width { get; }
         public short Height { get; }
+        public ushort NumberOfAnimationSprites { get; }
+        public ushort NumberOfOrientations { get; }
         public short XOffset { get; }
         public short YOffset { get; }
-        /* 26 unknown bytes, mostly zero, first four are 2 shorts */
-        public ushort Type { get; }
-        /* 4 flag/option-like bytes: */
-        public sbyte[] Flags { get; }
+        public bool IsAnimationReversible { get; }
+        public byte Type { get; }
+        public bool IsDataFullyCompressed { get; }
+        public bool IsDataExternal { get; }
+        public bool IsImagePartlyCompressed { get; }
         public byte BitmapId { get; }
-        /* 3 bytes + 4 zero bytes */
-        /* For D6 and up SG3 versions: alpha masks */
+        public byte AnimationSpeedId { get; }
         public uint AlphaOffset { get; }
         public uint AlphaLength { get; }
 

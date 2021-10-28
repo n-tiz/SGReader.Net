@@ -1,12 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using SGReader.Core.Helpers;
 
 namespace SGReader.Core
 {
     public class SGBitmapData
     {
-        char[] _unknown;
 
         public string FileName { get; }
         public string Comment { get; }
@@ -17,6 +17,8 @@ namespace SGReader.Core
         public uint StartIndex { get; }
         public uint EndIndex { get; }
 
+        private int[] _unknown;
+        
         /* 4 bytes - uint between start & end */
         /* 16b, 4x int with unknown purpose */
         /*  8b, 2x int with (real?) width & height */
@@ -34,7 +36,7 @@ namespace SGReader.Core
             NumImages = reader.ReadUInt32();
             StartIndex = reader.ReadUInt32();
             EndIndex = reader.ReadUInt32();
-            _unknown = reader.ReadChars(64).Append('\0').ToArray();
+            _unknown = reader.ReadInts32(4);
         }
     }
 }

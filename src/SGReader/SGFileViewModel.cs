@@ -14,19 +14,31 @@ namespace SGReader
         {
             _sgFile = sgFile;
             Name = _sgFile.Name;
-            Description = $"Images : {_sgFile.Images.Count}";
+            Description = $"Animations : {_sgFile.Animations.Count}";
 
-            foreach (var image in sgFile.Images)
+            foreach (var animation in sgFile.Animations)
             {
-                Images.Add(new SGImageViewModel(image));
+                Animations.Add(new SGAnimationViewModel(animation));
             }
-            AnimationPlayer = new AnimationPlayerViewModel(SelectedImages);
+            AnimationPlayer = new AnimationPlayerViewModel();
         }
 
         public AnimationPlayerViewModel AnimationPlayer { get; }
 
-        public ObservableCollection<SGImageViewModel> Images { get; } = new ObservableCollection<SGImageViewModel>();
-        public ObservableCollection<SGImageViewModel> SelectedImages { get; } = new ObservableCollection<SGImageViewModel>();
+        public ObservableCollection<SGAnimationViewModel> Animations { get; } = new ObservableCollection<SGAnimationViewModel>();
+        private SGAnimationViewModel _selectedAnimation;
+
+        public SGAnimationViewModel SelectedAnimation
+        {
+            get { return _selectedAnimation; }
+            set
+            {
+                if (_selectedAnimation == value) return;
+                _selectedAnimation = value;
+                AnimationPlayer.Animation = SelectedAnimation;
+                RaisePropertyChanged();
+            }
+        }
 
         private string _name;
 

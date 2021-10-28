@@ -23,24 +23,24 @@
         <Border Padding="8"
                 BorderThickness="0 1 0 0"
                 BorderBrush="{DynamicResource MaterialDesignDivider}" DockPanel.Dock="Bottom">
-            <TextBlock Text="{Binding ElementName=ImagesListView, Path=SelectedItem.FullDescription}" />
+            <TextBlock Text="{Binding ElementName=ImagesListView, Path=SelectedItem.Description}" />
         </Border>
         <Grid>
-            <ListView x:Name="ImagesListView" DataContextChanged="ImagesListView_OnDataContextChanged" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="ImagesListView_OnSelectionChanged"
-                      ItemsSource="{Binding Images}">
+            <ListView x:Name="ImagesListView" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectedItem="{Binding SelectedAnimation}"
+                      ItemsSource="{Binding Animations}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <controls:VirtualizingWrapPanel />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type local:SGImageViewModel}">
-                        <DockPanel Margin="8" ToolTip="{Binding FullDescription}" Height="135" Width="120">
-                            <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center" Text="{Binding Group}"
-                                       FontWeight="Bold" />
+                    <DataTemplate DataType="{x:Type local:SGAnimationViewModel}">
+                        <DockPanel Margin="8" ToolTip="{Binding Description}" Height="135" Width="120">
+                            <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center"
+                                       Text="{Binding Preview.Group}" FontWeight="Bold" />
                             <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center"
                                        Text="{Binding Description}" FontWeight="Bold" />
-                            <Image Source="{Binding Bitmap}" VerticalAlignment="Center" HorizontalAlignment="Center"
+                            <Image Source="{Binding Preview.Bitmap}" VerticalAlignment="Center" HorizontalAlignment="Center"
                                    Stretch="None" />
                         </DockPanel>
                     </DataTemplate>
