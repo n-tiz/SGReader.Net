@@ -3,12 +3,20 @@ using System.IO;
 
 namespace SGReader.Core
 {
+    public enum SGFileVersion
+    {
+        SG2FormatDemo = 207, //C3 demo
+        SG2Format = 211,
+        SG3Format = 213,
+        SG3FormatWithAlphaMask = 214
+    }
+
     public class SGHeader
     {
         public const int HeaderSize = 680;
 
         public uint SGFileSize { get; }
-        public uint Version { get; }
+        public SGFileVersion Version { get; }
         public uint Unknown { get; }
 
         public int MaxImageDataCount { get; }
@@ -23,7 +31,7 @@ namespace SGReader.Core
         public SGHeader(BinaryReader reader)
         {
             SGFileSize = reader.ReadUInt32();
-            Version = reader.ReadUInt32();
+            Version = (SGFileVersion) reader.ReadUInt32();
             Unknown = reader.ReadUInt32();
 
             MaxImageDataCount = reader.ReadInt32();

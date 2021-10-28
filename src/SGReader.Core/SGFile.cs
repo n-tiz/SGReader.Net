@@ -36,8 +36,8 @@ namespace SGReader.Core
                 fileStream.Seek(SGHeader.HeaderSize, SeekOrigin.Begin);
                 CheckVersion();
                 LoadBitmaps(reader);
-                fileStream.Seek(SGHeader.HeaderSize + GetMaxBitmapDataCount() * SGBitmap.DataSize, SeekOrigin.Begin);
-                LoadImages(reader, Header.Version >= 0xD6);
+                fileStream.Seek(SGHeader.HeaderSize + GetMaxBitmapDataCount(Header.Version) * SGBitmap.DataSize, SeekOrigin.Begin);
+                LoadImages(reader, Header.Version >= SGFileVersion.SG3FormatWithAlphaMask);
             }
         }
 
@@ -81,7 +81,7 @@ namespace SGReader.Core
 
         private void CheckVersion()
         {
-            if (Header.Version == 0xcf || Header.Version == 0xd3)
+            if (Header.Version == SGFileVersion.SG2FormatDemo || Header.Version == SGFileVersion.SG2Format)
             {
                 // SG2 file: filesize = 74480 or 522680 (depending on whether it's
                 // a "normal" sg2 or an enemy sg2
@@ -90,7 +90,7 @@ namespace SGReader.Core
                     return;
                 }
             }
-            else if (Header.Version == 0xd5 || Header.Version == 0xd6)
+            else if (Header.Version == SGFileVersion.SG3Format || Header.Version == SGFileVersion.SG3FormatWithAlphaMask)
             {
                 // SG3 file: filesize = the actual size of the sg3 file
                 FileInfo fi = new FileInfo(_filePath);
@@ -103,16 +103,19 @@ namespace SGReader.Core
             throw new InvalidSGFileException($"File version ({Header.Version}) or file size is not valid.", this);
         }
 
-        private int GetMaxBitmapDataCount()
+        private static int GetMaxBitmapDataCount(SGFileVersion version)
         {
-            switch (Header.Version)
+            switch (version)
             {
-                case 0xcf:
-                    return 50; // C3 demo SG2
-                case 0xd3:
-                    return 100; // SG2
+                case SGFileVersion.SG2FormatDemo:
+                    return 50;
+                case SGFileVersion.SG2Format:
+                    return 100;
+                case SGFileVersion.SG3Format:
+                case SGFileVersion.SG3FormatWithAlphaMask:
+                    return 200;
                 default:
-                    return 200; // SG3
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
