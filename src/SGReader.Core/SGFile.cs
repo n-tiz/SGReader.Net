@@ -14,10 +14,12 @@ namespace SGReader.Core
         private readonly List<SGImage> _images = new List<SGImage>();
 
         public string Name { get; }
-        public IReadOnlyList<SGBitmap> Bitmaps => _bitmaps;
+
         public IReadOnlyList<SGImage> Images => _images;
 
         public SGHeader Header { get; private set; }
+
+        public SGIndex Index { get; private set; }
 
         public SGFile(string filePath)
         {
@@ -33,10 +35,12 @@ namespace SGReader.Core
             using (BinaryReader reader = new BinaryReader(fileStream, Encoding.Default))
             {
                 Header = new SGHeader(reader);
-                fileStream.Seek(SGHeader.HeaderSize, SeekOrigin.Begin);
                 CheckVersion();
+                fileStream.Seek(SGHeader.HeaderSize, SeekOrigin.Begin);
+                Index = new SGIndex(reader);
+                fileStream.Seek(SGHeader.HeaderSize + SGIndex.IndexSize, SeekOrigin.Begin);
                 LoadBitmaps(reader);
-                fileStream.Seek(SGHeader.HeaderSize + GetMaxBitmapDataCount(Header.Version) * SGBitmap.DataSize, SeekOrigin.Begin);
+                fileStream.Seek(SGHeader.HeaderSize + SGIndex.IndexSize + GetMaxBitmapDataCount(Header.Version) * SGBitmap.DataSize, SeekOrigin.Begin);
                 LoadImages(reader, Header.Version >= SGFileVersion.SG3FormatWithAlphaMask);
             }
         }

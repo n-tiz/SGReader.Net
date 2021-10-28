@@ -13,7 +13,7 @@ namespace SGReader.Core
 
     public class SGHeader
     {
-        public const int HeaderSize = 680;
+        public const int HeaderSize = 80;
 
         public uint SGFileSize { get; }
         public SGFileVersion Version { get; }
