@@ -6,7 +6,7 @@ namespace SGReader.Core.Exceptions
     {
         public SGFile File { get; }
 
-        public InvalidSGFileException(string message, SGFile file)
+        public InvalidSGFileException(string message, SGFile file) : base(message)
         {
             File = file;
         }

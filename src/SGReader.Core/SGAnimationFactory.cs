@@ -6,33 +6,30 @@ namespace SGReader.Core
 {
     public static class SGAnimationFactory
     {
-        public static List<SGAnimation> BuildAnimations(IImageContainer container,
-            IReadOnlyCollection<ushort> indexEntries)
+        public static List<SGAnimation> BuildAnimations(IImageContainer container, IReadOnlyCollection<ushort> indexEntries)
         {
             List<SGAnimation> animations = new List<SGAnimation>();
 
             foreach (var id in indexEntries.Where(id => id != 0)) //todo : Check les ids !
             {
                 var firstImage = container.GetImageById(id);
-                animations.AddRange(BuildAnimations(
-                    container.Images.Skip(firstImage.Id).Take(firstImage.AnimationSprites * firstImage.Orientations)
-                        .ToList(), firstImage.AnimationSprites, firstImage.Orientations));
+                animations.AddRange(BuildAnimations(container, firstImage));
             }
 
             return animations;
         }
 
-        private static List<SGAnimation> BuildAnimations(List<SGImage> images, int animationSprites, int orientations)
+        private static IEnumerable<SGAnimation> BuildAnimations(IImageContainer container, SGImage firstImage)
         {
             List<SGAnimation> animations = new List<SGAnimation>();
 
-            for (int o = 0; o < orientations; o++)
+            for (int o = 0; o < firstImage.Orientations; o++)
             {
                 List<SGImage> animationsImages = new List<SGImage>();
-                for (int a = 0; a < animationSprites; a++)
+                for (int a = 0; a < firstImage.AnimationSprites; a++)
                 {
-                    var image = images.ElementAt(o + a * orientations);
-                    Console.WriteLine($"{o + a * orientations} : {image.Id - images.First().Id}");
+                    var image = container.GetImageById(firstImage.Id + o + a * firstImage.Orientations);
+//                    Console.WriteLine($"{o + a * orientations} : {image.Id - images.First().Id}");
                     animationsImages.Add(image);
                 }
 

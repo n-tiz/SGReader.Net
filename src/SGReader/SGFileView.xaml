@@ -23,7 +23,7 @@
         <Border Padding="8"
                 BorderThickness="0 1 0 0"
                 BorderBrush="{DynamicResource MaterialDesignDivider}" DockPanel.Dock="Bottom">
-            <TextBlock Text="{Binding ElementName=ImagesListView, Path=SelectedItem.Description}" />
+            <TextBlock Text="{Binding ElementName=ImagesListView, Path=SelectedItem.FullDescription}" />
         </Border>
         <Grid>
             <ListView x:Name="ImagesListView" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectedItem="{Binding SelectedAnimation}"

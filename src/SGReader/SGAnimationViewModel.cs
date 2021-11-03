@@ -16,6 +16,7 @@ namespace SGReader
 
         public string Name => _animation.Name;
         public string Description => $"Images: {Count}";
+        public string FullDescription => string.Join("=>", Sprites.Select(s => s.Id));
 
         public SGAnimationViewModel(SGAnimation animation)
         {
