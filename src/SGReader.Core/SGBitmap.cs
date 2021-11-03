@@ -38,23 +38,6 @@ namespace SGReader.Core
             image.Parent = this;
         }
 
-        public SGImage GetImageById(int imageId)
-        {
-            if (imageId < 0 || imageId >= _images.Count)
-                return null;
-            return _images[imageId];
-        }
-
-        public Bitmap CreateImage(int imageId)
-        {
-            if (imageId < 0 || imageId >= _images.Count)
-            {
-                return null;
-            }
-
-            return _images[imageId].CreateImage();
-        }
-
         public FileStream OpenFile(bool isExtern)
         {
             if (_file != null && _isFileExtern != isExtern)

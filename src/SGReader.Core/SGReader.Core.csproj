@@ -51,6 +51,7 @@
     <Compile Include="Bitmaps\DirectBitmap.cs" />
     <Compile Include="Exceptions\InvalidSGFileException.cs" />
     <Compile Include="Exceptions\InvalidSGImageException.cs" />
+    <Compile Include="IImageContainer.cs" />
     <Compile Include="SGAnimation.cs" />
     <Compile Include="SGAnimationFactory.cs" />
     <Compile Include="SGBitmap.cs" />

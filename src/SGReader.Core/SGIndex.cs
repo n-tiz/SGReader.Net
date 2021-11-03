@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 
 namespace SGReader.Core
 {
@@ -10,6 +12,8 @@ namespace SGReader.Core
         private readonly ushort[] _entries = new ushort[EntriesCount];
 
         public ushort Get(int entryId) => _entries[entryId];
+
+        public IReadOnlyCollection<ushort> Entries => _entries;
 
         public SGIndex(BinaryReader reader)
         {

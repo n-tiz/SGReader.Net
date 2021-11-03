@@ -1,28 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SGReader.Core
 {
     public static class SGAnimationFactory
     {
-        public static List<SGAnimation> BuildAnimations(SGBitmap bitmap)
+        public static List<SGAnimation> BuildAnimations(IImageContainer container,
+            IReadOnlyCollection<ushort> indexEntries)
         {
             List<SGAnimation> animations = new List<SGAnimation>();
 
-            for (var i = 0; i < bitmap.Images.Count; i++)
+            foreach (var id in indexEntries.Where(id => id != 0)) //todo : Check les ids !
             {
-                var image = bitmap.Images[i];
-                if (image.AnimationSprites != 0 && image.Orientations != 0)
-                {
-                    animations.AddRange(BuildAnimations(bitmap, bitmap.Images.Skip(i).Take(image.AnimationSprites * image.Orientations).ToList(), image.AnimationSprites, image.Orientations));
-                    i += image.AnimationSprites * image.Orientations;
-                }
+                var firstImage = container.GetImageById(id);
+                animations.AddRange(BuildAnimations(
+                    container.Images.Skip(firstImage.Id).Take(firstImage.AnimationSprites * firstImage.Orientations)
+                        .ToList(), firstImage.AnimationSprites, firstImage.Orientations));
             }
 
             return animations;
         }
 
-        private static List<SGAnimation> BuildAnimations(SGBitmap bitmap, List<SGImage> images, int animationSprites, int orientations)
+        private static List<SGAnimation> BuildAnimations(List<SGImage> images, int animationSprites, int orientations)
         {
             List<SGAnimation> animations = new List<SGAnimation>();
 
@@ -31,11 +31,16 @@ namespace SGReader.Core
                 List<SGImage> animationsImages = new List<SGImage>();
                 for (int a = 0; a < animationSprites; a++)
                 {
-                    animationsImages.Add(images.ElementAt(o + a * orientations));
+                    var image = images.ElementAt(o + a * orientations);
+                    Console.WriteLine($"{o + a * orientations} : {image.Id - images.First().Id}");
+                    animationsImages.Add(image);
                 }
-                animations.Add(new SGAnimation(bitmap, animationsImages));
+
+                animations.Add(new SGAnimation(animationsImages));
             }
+
             return animations;
         }
+
     }
 }

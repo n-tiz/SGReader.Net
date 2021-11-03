@@ -2,12 +2,12 @@
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Linq;
 using SGReader.Core.Exceptions;
 
 namespace SGReader.Core
 {
-    public class SGFile : IDisposable
+    public class SGFile : IImageContainer, IDisposable
     {
         private readonly string _filePath;
         private readonly List<SGBitmap> _bitmaps = new List<SGBitmap>();
@@ -51,10 +51,7 @@ namespace SGReader.Core
 
         private void LoadAnimations()
         {
-            foreach (var bitmap in _bitmaps)
-            {
-                _animations.AddRange(SGAnimationFactory.BuildAnimations(bitmap));
-            }
+            _animations.AddRange(SGAnimationFactory.BuildAnimations(this, Index.Entries));
         }
 
 
@@ -136,66 +133,15 @@ namespace SGReader.Core
             }
         }
 
-        public int GetImagesCountForBitmap(int bitmapId)
-        {
-            if (bitmapId < 0 || bitmapId >= _bitmaps.Count)
-                return -1;
-            return _bitmaps[bitmapId].Images.Count;
-        }
-
         public SGImage GetImageById(int imageId)
         {
             if (imageId < 0 || imageId >= _images.Count)
             {
                 return null;
             }
-            return _images[imageId];
-        }
-
-        public SGImage GetImageForBitmap(int bitmapId, int imageId)
-        {
-            if (bitmapId < 0 || bitmapId >= _bitmaps.Count || imageId < 0 || imageId >= _bitmaps[bitmapId].Images.Count)
-            {
-                return null;
-            }
-
-            return _bitmaps[bitmapId].Images[imageId];
-        }
-
-        public Bitmap CreateImage(int imageId)
-        {
-            if (imageId < 0 || imageId >= Images.Count)
-            {
-                return null;
-            }
-            return _images[imageId].CreateImage();
+            return _images.SingleOrDefault(i => i.Id == imageId);
         }
         
-        public Bitmap CreateImageForBitmap(int bitmapId, int imageId)
-        {
-            if (bitmapId < 0 || bitmapId >= _bitmaps.Count ||
-                imageId < 0 || imageId >= _bitmaps[bitmapId].Images.Count)
-            {
-                return null;
-            }
-            return _bitmaps[bitmapId].CreateImage(imageId);
-        }
-
-        public SGBitmap GetBitmapById(int bitmapId)
-        {
-            if (bitmapId < 0 || bitmapId >= _bitmaps.Count)
-            {
-                return null;
-            }
-
-            return _bitmaps[bitmapId];
-        }
-
-        public string GetBitmapDescription(int bitmapId)
-        {
-            return GetBitmapById(bitmapId)?.Description;
-        }
-
         public void Dispose()
         {
             foreach (var bitmap in _bitmaps)
