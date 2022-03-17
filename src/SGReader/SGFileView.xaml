@@ -9,6 +9,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:animations="clr-namespace:SGReader.Animations"
              mc:Ignorable="d"
+             x:Name="Root"
              Background="{DynamicResource MaterialDesignCardBackground}"
              d:DesignHeight="450" d:DesignWidth="800" d:DataContext="{d:DesignInstance local:SGFileViewModel}">
     <DockPanel>
@@ -23,29 +24,38 @@
         <Border Padding="8"
                 BorderThickness="0 1 0 0"
                 BorderBrush="{DynamicResource MaterialDesignDivider}" DockPanel.Dock="Bottom">
-            <TextBlock Text="{Binding ElementName=ImagesListView, Path=SelectedItem.FullDescription}" />
+            <TextBlock Text="{Binding Path=SelectedAnimation.FullDescription}" />
         </Border>
         <Grid>
-            <ListView x:Name="ImagesListView" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectedItem="{Binding SelectedAnimation}"
-                      ItemsSource="{Binding Animations}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <controls:VirtualizingWrapPanel />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+            <ItemsControl  x:Name="ImagesListView" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ItemsSource="{Binding AnimationsGroups}">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type local:SGAnimationViewModel}">
-                        <DockPanel Margin="8" ToolTip="{Binding Description}" Height="135" Width="120">
-                            <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center"
-                                       Text="{Binding Preview.Group}" FontWeight="Bold" />
-                            <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center"
-                                       Text="{Binding Description}" FontWeight="Bold" />
-                            <Image Source="{Binding Preview.Bitmap}" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                   Stretch="None" />
+                    <DataTemplate DataType="{x:Type local:SGAnimationsGroupViewModel}">
+                        <DockPanel Margin="5">
+                            <TextBlock Margin="10" DockPanel.Dock="Top"    Style="{StaticResource MaterialDesignBody1TextBlock}"></TextBlock>
+                            <ListView x:Name="ImagesListView" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectedItem="{Binding ElementName=Root, Path=DataContext.SelectedAnimation}"
+                                  ItemsSource="{Binding Animations}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <controls:VirtualizingWrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type local:SGAnimationViewModel}">
+                                    <DockPanel Margin="8" ToolTip="{Binding Description}" Height="135" Width="120">
+                                        <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center"
+                                                   Text="{Binding Preview.Group}" FontWeight="Bold" />
+                                        <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center"
+                                                   Text="{Binding Description}" FontWeight="Bold" />
+                                        <Image Source="{Binding Preview.Bitmap}" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                               Stretch="None" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ListView>
                         </DockPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
-            </ListView>
+            </ItemsControl>
             <materialDesign:Card Grid.Column="0" Width="200" Height="250"
                                  VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="5">
                 <animations:AnimationPlayerView DataContext="{Binding AnimationPlayer}" />

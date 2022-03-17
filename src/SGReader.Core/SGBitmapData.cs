@@ -17,7 +17,7 @@ namespace SGReader.Core
         public uint StartIndex { get; }
         public uint EndIndex { get; }
 
-        private int[] _unknown;
+        private short[] _unknown;
         
         /* 4 bytes - uint between start & end */
         /* 16b, 4x int with unknown purpose */
@@ -36,7 +36,7 @@ namespace SGReader.Core
             NumImages = reader.ReadUInt32();
             StartIndex = reader.ReadUInt32();
             EndIndex = reader.ReadUInt32();
-            _unknown = reader.ReadInts32(4);
+            _unknown = reader.ReadInts16(4);
         }
     }
 }

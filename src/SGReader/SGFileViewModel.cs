@@ -14,18 +14,18 @@ namespace SGReader
         {
             _sgFile = sgFile;
             Name = _sgFile.Name;
-            Description = $"Animations : {_sgFile.Animations.Count}";
+            Description = $"Animations : {_sgFile.AnimationsGroups.Count}";
 
-            foreach (var animation in sgFile.Animations)
+            foreach (var animation in sgFile.AnimationsGroups)
             {
-                Animations.Add(new SGAnimationViewModel(animation));
+                AnimationsGroups.Add(new SGAnimationsGroupViewModel(animation));
             }
             AnimationPlayer = new AnimationPlayerViewModel();
         }
 
         public AnimationPlayerViewModel AnimationPlayer { get; }
 
-        public ObservableCollection<SGAnimationViewModel> Animations { get; } = new ObservableCollection<SGAnimationViewModel>();
+        public ObservableCollection<SGAnimationsGroupViewModel> AnimationsGroups { get; } = new ObservableCollection<SGAnimationsGroupViewModel>();
         private SGAnimationViewModel _selectedAnimation;
 
         public SGAnimationViewModel SelectedAnimation

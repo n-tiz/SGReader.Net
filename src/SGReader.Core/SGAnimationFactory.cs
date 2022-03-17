@@ -6,20 +6,20 @@ namespace SGReader.Core
 {
     public static class SGAnimationFactory
     {
-        public static List<SGAnimation> BuildAnimations(IImageContainer container, IReadOnlyCollection<ushort> indexEntries)
+        public static List<SGAnimationsGroup> BuildAnimationsGroup(IImageContainer container, IReadOnlyCollection<ushort> indexEntries)
         {
-            List<SGAnimation> animations = new List<SGAnimation>();
+            List<SGAnimationsGroup> animations = new List<SGAnimationsGroup>();
 
-            foreach (var id in indexEntries.Where(id => id != 0)) //todo : Check les ids !
+            foreach (var id in indexEntries.Where(id => id != 0))
             {
                 var firstImage = container.GetImageById(id);
-                animations.AddRange(BuildAnimations(container, firstImage));
+                animations.Add(BuildAnimations(container, firstImage));
             }
 
             return animations;
         }
 
-        private static IEnumerable<SGAnimation> BuildAnimations(IImageContainer container, SGImage firstImage)
+        private static SGAnimationsGroup BuildAnimations(IImageContainer container, SGImage firstImage)
         {
             List<SGAnimation> animations = new List<SGAnimation>();
 
@@ -29,14 +29,13 @@ namespace SGReader.Core
                 for (int a = 0; a < firstImage.AnimationSprites; a++)
                 {
                     var image = container.GetImageById(firstImage.Id + o + a * firstImage.Orientations);
-//                    Console.WriteLine($"{o + a * orientations} : {image.Id - images.First().Id}");
                     animationsImages.Add(image);
                 }
 
                 animations.Add(new SGAnimation(animationsImages));
             }
 
-            return animations;
+            return new SGAnimationsGroup(firstImage.Orientations, firstImage.AnimationSprites, animations);
         }
 
     }

@@ -12,13 +12,13 @@ namespace SGReader.Core
         private readonly string _filePath;
         private readonly List<SGBitmap> _bitmaps = new List<SGBitmap>();
         private readonly List<SGImage> _images = new List<SGImage>();
-        private readonly List<SGAnimation> _animations = new List<SGAnimation>();
+        private readonly List<SGAnimationsGroup> _animationsGroups = new List<SGAnimationsGroup>();
 
         public string Name { get; }
 
         public IReadOnlyList<SGImage> Images => _images;
 
-        public IReadOnlyList<SGAnimation> Animations => _animations;
+        public IReadOnlyList<SGAnimationsGroup> AnimationsGroups => _animationsGroups;
 
         public SGHeader Header { get; private set; }
 
@@ -51,7 +51,7 @@ namespace SGReader.Core
 
         private void LoadAnimations()
         {
-            _animations.AddRange(SGAnimationFactory.BuildAnimations(this, Index.Entries));
+            _animationsGroups.AddRange(SGAnimationFactory.BuildAnimationsGroup(this, Index.Entries));
         }
 
 

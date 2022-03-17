@@ -53,6 +53,7 @@
     <Compile Include="IImageContainer.cs" />
     <Compile Include="SGAnimation.cs" />
     <Compile Include="SGAnimationFactory.cs" />
+    <Compile Include="SGAnimationsGroup.cs" />
     <Compile Include="SGBitmap.cs" />
     <Compile Include="SGBitmapData.cs" />
     <Compile Include="SGFile.cs" />
