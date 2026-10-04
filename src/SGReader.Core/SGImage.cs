@@ -32,6 +32,39 @@ namespace SGReader.Core
         public byte Type => _workData.Type;
         public int AnimationSprites => _workData.NumberOfAnimationSprites;
         public int Orientations => _workData.NumberOfOrientations;
+        public bool IsAnimationReversible => _workData.IsAnimationReversible;
+        public byte AnimationSpeedId => _workData.AnimationSpeedId;
+
+        // Mirror records may keep their own hotspot; otherwise mirror the source hotspot
+        // after FlipX (Julius: draw at position - sprite_offset).
+        public short XOffset
+        {
+            get
+            {
+                if (!IsInverted)
+                    return _workData.XOffset;
+
+                // The mirrored SG record often stores the correct facing hotspot.
+                if (_data.XOffset != 0 || _data.YOffset != 0)
+                    return _data.XOffset;
+
+                return (short)Math.Max(0, _workData.Width - 1 - _workData.XOffset);
+            }
+        }
+
+        public short YOffset
+        {
+            get
+            {
+                if (!IsInverted)
+                    return _workData.YOffset;
+
+                if (_data.XOffset != 0 || _data.YOffset != 0)
+                    return _data.YOffset;
+
+                return _workData.YOffset;
+            }
+        }
 
         public SGImage(int id, BinaryReader reader, bool includeAlpha)
         {

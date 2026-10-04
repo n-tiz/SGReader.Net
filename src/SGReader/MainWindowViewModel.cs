@@ -50,7 +50,7 @@ namespace SGReader
                     var fileName = Path.GetFileName(path);
                     LoadingMessage = $"Loading {fileName}…";
 
-                    var vm = await Task.Run(() =>
+                        var vm = await Task.Run(() =>
                     {
                         var file = new SGFile(path);
                         file.Load();

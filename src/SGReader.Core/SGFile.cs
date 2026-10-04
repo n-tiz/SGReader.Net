@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using System.Linq;
 using SGReader.Core.Exceptions;
 
 namespace SGReader.Core
@@ -137,11 +136,11 @@ namespace SGReader.Core
 
         public SGImage GetImageById(int imageId)
         {
-            if (imageId < 0 || imageId >= _images.Count)
-            {
+            // Image IDs are 1-based; the dummy record at position 0 is discarded on load.
+            if (imageId < 1 || imageId > _images.Count)
                 return null;
-            }
-            return _images.SingleOrDefault(i => i.Id == imageId);
+
+            return _images[imageId - 1];
         }
         
         public void Dispose()

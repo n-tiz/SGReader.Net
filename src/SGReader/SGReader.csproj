@@ -8,7 +8,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>SGReader</RootNamespace>
     <AssemblyName>SGReader</AssemblyName>
-    <ApplicationIcon />
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Resource Include="Icon.png" />
+    <None Include="Icon.ico" />
   </ItemGroup>
 
 </Project>

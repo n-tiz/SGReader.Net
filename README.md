@@ -1,6 +1,12 @@
+<p align="center">
+  <img src="docs/logo.png" alt="SGReader logo" width="128" />
+</p>
+
 # SGReader.Net
 
 Extract sprites from the Impressions Games city-building titles (Caesar III, Pharaoh, Zeus, Emperor, etc.), inspired by [Pecunia SGReader](https://github.com/bvschaik/citybuilding-tools).
+
+![SGReader screenshot](docs/screenshot.png)
 
 ## Requirements
 

@@ -11,7 +11,7 @@
              d:DataContext="{d:DesignInstance animations:AnimationPlayerViewModel}">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" MinHeight="220" />
+            <RowDefinition Height="220" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -27,11 +27,11 @@
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            Foreground="{StaticResource AppSubtleTextBrush}"
-                           Visibility="{Binding CurrentSprite, Converter={StaticResource InverseNullToVisibilityConverter}}" />
-                <Image Source="{Binding CurrentSprite.Bitmap}"
+                           Visibility="{Binding CurrentBitmap, Converter={StaticResource InverseNullToVisibilityConverter}}" />
+                <Image Source="{Binding CurrentBitmap}"
                        Stretch="Uniform"
-                       StretchDirection="DownOnly"
                        Margin="16"
+                       MaxHeight="280"
                        SnapsToDevicePixels="True"
                        UseLayoutRounding="True"
                        RenderOptions.BitmapScalingMode="NearestNeighbor"
@@ -95,6 +95,7 @@
                         IsSnapToTickEnabled="True" />
                 <TextBlock Margin="0,8,0,0"
                            FontSize="11"
+                           LineHeight="16"
                            Foreground="{StaticResource AppSubtleTextBrush}"
                            Text="Lower values play faster." />
             </StackPanel>

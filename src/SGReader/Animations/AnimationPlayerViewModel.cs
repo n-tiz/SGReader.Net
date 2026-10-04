@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,20 +12,25 @@ namespace SGReader.Animations
     public partial class AnimationPlayerViewModel : ObservableObject, IDisposable
     {
         public double MinimumFrame => 0.01;
-        public double MaximumFrame => 0.1;
+        public double MaximumFrame => 0.25;
         public double TickFrequency => 0.01;
 
         private readonly DispatcherTimer _timer;
         private DateTime _start = DateTime.Now;
+        private IReadOnlyList<SGImageViewModel> _playbackSprites = Array.Empty<SGImageViewModel>();
+        private int _frameIndex;
 
         [ObservableProperty]
-        private double _frame = 0.06;
+        private double _frame = 0.08;
 
         [ObservableProperty]
         private bool _isPlaying = true;
 
         [ObservableProperty]
         private SGAnimationViewModel _animation;
+
+        [ObservableProperty]
+        private BitmapImage _currentBitmap;
 
         public AnimationPlayerViewModel()
         {
@@ -35,39 +40,31 @@ namespace SGReader.Animations
 
         private void TimerCallback(object sender, EventArgs e)
         {
-            if (IsPlaying && Animation != null)
-            {
-                OnPropertyChanged(nameof(CurrentSprite));
-                SaveFrameCommand.NotifyCanExecuteChanged();
-            }
-        }
+            if (!IsPlaying || _playbackSprites.Count <= 1 || Frame <= 0)
+                return;
 
-        public SGImageViewModel CurrentSprite
-        {
-            get
-            {
-                var count = Animation?.Sprites.Count ?? 0;
-                if (count == 0)
-                    return null;
+            var elapsed = (DateTime.Now - _start).TotalSeconds;
+            var index = (int)(elapsed / Frame) % _playbackSprites.Count;
+            if (index == _frameIndex)
+                return;
 
-                double fullTime = count * Frame;
-                if (fullTime <= 0)
-                    return Animation.Sprites.FirstOrDefault();
-
-                var elapsedTime = (DateTime.Now - _start).TotalSeconds % fullTime;
-                var index = (int)(count * (elapsedTime / fullTime));
-                return Animation.Sprites.ElementAt(Math.Clamp(index, 0, count - 1));
-            }
+            _frameIndex = index;
+            CurrentBitmap = _playbackSprites[_frameIndex]?.Bitmap;
+            SaveFrameCommand.NotifyCanExecuteChanged();
         }
 
         public string StatusLabel => Animation == null
             ? "Select an animation"
-            : IsPlaying ? "Playing" : "Paused";
+            : IsPlaying
+                ? (Animation.IsReversible ? "Playing · reversible" : "Playing")
+                : "Paused";
 
         partial void OnAnimationChanged(SGAnimationViewModel value)
         {
+            _playbackSprites = BuildPlaybackSprites(value);
+            _frameIndex = 0;
             _start = DateTime.Now;
-            OnPropertyChanged(nameof(CurrentSprite));
+            CurrentBitmap = _playbackSprites.Count > 0 ? _playbackSprites[0]?.Bitmap : null;
             OnPropertyChanged(nameof(StatusLabel));
             SaveFrameCommand.NotifyCanExecuteChanged();
         }
@@ -83,14 +80,17 @@ namespace SGReader.Animations
         [RelayCommand(CanExecute = nameof(CanSaveFrame))]
         private void SaveFrame()
         {
-            var sprite = CurrentSprite;
-            if (sprite?.Bitmap == null)
+            if (CurrentBitmap == null)
                 return;
+
+            var sprite = _playbackSprites.Count > 0
+                ? _playbackSprites[Math.Clamp(_frameIndex, 0, _playbackSprites.Count - 1)]
+                : null;
 
             var dlg = new SaveFileDialog
             {
                 Filter = "PNG image|*.png",
-                FileName = $"{Animation?.Title ?? "frame"}_{sprite.Id:D5}.png",
+                FileName = $"{Animation?.Title ?? "frame"}_{(sprite?.Id ?? 0):D5}.png",
                 DefaultExt = ".png"
             };
 
@@ -98,17 +98,33 @@ namespace SGReader.Animations
                 return;
 
             var encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(sprite.Bitmap));
+            encoder.Frames.Add(BitmapFrame.Create(CurrentBitmap));
             using var stream = File.Create(dlg.FileName);
             encoder.Save(stream);
         }
 
-        private bool CanSaveFrame() => CurrentSprite?.Bitmap != null;
+        private bool CanSaveFrame() => CurrentBitmap != null;
 
         partial void OnIsPlayingChanged(bool value)
         {
             OnPropertyChanged(nameof(StatusLabel));
             SaveFrameCommand.NotifyCanExecuteChanged();
+        }
+
+        private static IReadOnlyList<SGImageViewModel> BuildPlaybackSprites(SGAnimationViewModel animation)
+        {
+            if (animation == null)
+                return Array.Empty<SGImageViewModel>();
+
+            var sprites = animation.Sprites;
+            if (!animation.IsReversible || sprites.Count <= 2)
+                return sprites;
+
+            var playback = new List<SGImageViewModel>(sprites.Count * 2 - 2);
+            playback.AddRange(sprites);
+            for (int i = sprites.Count - 2; i >= 1; i--)
+                playback.Add(sprites[i]);
+            return playback;
         }
 
         public void Dispose()
