@@ -35,7 +35,7 @@ namespace SGReader.Core
             if (!File.Exists(_filePath))
                 throw new FileNotFoundException(_filePath);
             using (FileStream fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (BinaryReader reader = new BinaryReader(fileStream, Encoding.Default))
+            using (BinaryReader reader = new BinaryReader(fileStream, Encoding.Latin1))
             {
                 Header = new SGHeader(reader);
                 CheckVersion();

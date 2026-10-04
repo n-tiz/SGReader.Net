@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using GalaSoft.MvvmLight;
+using CommunityToolkit.Mvvm.ComponentModel;
 using SGReader.Core;
 
 namespace SGReader
 {
-    public class SGAnimationsGroupViewModel : ViewModelBase
+    public class SGAnimationsGroupViewModel : ObservableObject
     {
         private readonly SGAnimationsGroup _animationsGroup;
 

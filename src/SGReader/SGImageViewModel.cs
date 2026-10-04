@@ -1,16 +1,13 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Media.Imaging;
-using GalaSoft.MvvmLight;
+using CommunityToolkit.Mvvm.ComponentModel;
 using SGReader.Core;
 
 namespace SGReader
 {
-    public class SGImageViewModel : ViewModelBase
+    public class SGImageViewModel : ObservableObject
     {
         private readonly SGImage _image;
 
@@ -24,7 +21,12 @@ namespace SGReader
             _image = image;
             var bitmap = image.CreateImage();
             if (bitmap != null)
-                Bitmap = ToBitmapImage(bitmap);
+            {
+                using (bitmap)
+                {
+                    Bitmap = ToBitmapImage(bitmap);
+                }
+            }
         }
 
         public BitmapImage Bitmap { get; }
@@ -47,6 +49,4 @@ namespace SGReader
             }
         }
     }
-
-
 }

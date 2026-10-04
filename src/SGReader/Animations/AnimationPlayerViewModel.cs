@@ -1,45 +1,25 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
-using System.Windows.Input;
 using System.Windows.Threading;
-using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.CommandWpf;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace SGReader.Animations
 {
-    public class AnimationPlayerViewModel : ViewModelBase
+    public partial class AnimationPlayerViewModel : ObservableObject
     {
         public double MinimumFrame => 0.01;
         public double MaximumFrame => 0.1;
         public double TickFrequency => 0.01;
 
+        private readonly DispatcherTimer _timer;
+        private readonly DateTime _start;
+
+        [ObservableProperty]
         private double _frame = 0.06;
-        private DispatcherTimer _timer;
 
-        public double Frame
-        {
-            get { return _frame; }
-            set
-            {
-                _frame = value;
-                RaisePropertyChanged(nameof(Frame));
-            }
-        }
-
+        [ObservableProperty]
         private bool _isPlaying = true;
-
-        public bool IsPlaying
-        {
-            get { return _isPlaying; }
-            set
-            {
-                if (_isPlaying == value) return;
-                _isPlaying = value;
-                RaisePropertyChanged(nameof(IsPlaying));
-            }
-        }
 
         public AnimationPlayerViewModel()
         {
@@ -53,10 +33,8 @@ namespace SGReader.Animations
         private void TimerCallback(object sender, EventArgs e)
         {
             if (IsPlaying)
-                RaisePropertyChanged(nameof(CurrentSprite));
+                OnPropertyChanged(nameof(CurrentSprite));
         }
-
-        private DateTime _start;
 
         public SGImageViewModel CurrentSprite
         {
@@ -71,33 +49,26 @@ namespace SGReader.Animations
             }
         }
 
-        private ICommand _playCommand;
-
-        public ICommand PlayCommand => _playCommand ?? (_playCommand = new RelayCommand(PlayCommandExecute, PlayCommandCanExecute));
-
-        private bool PlayCommandCanExecute()
-        {
-            return !IsPlaying;
-        }
-
-        private void PlayCommandExecute()
+        [RelayCommand(CanExecute = nameof(CanPlay))]
+        private void Play()
         {
             IsPlaying = true;
         }
 
-        private ICommand _pauseCommand;
+        private bool CanPlay() => !IsPlaying;
 
-        public ICommand PauseCommand => _pauseCommand ?? (_pauseCommand = new RelayCommand(PauseCommandExecute, PauseCommandCanExecute));
-
-
-        private bool PauseCommandCanExecute()
-        {
-            return IsPlaying;
-        }
-
-        private void PauseCommandExecute()
+        [RelayCommand(CanExecute = nameof(CanPause))]
+        private void Pause()
         {
             IsPlaying = false;
+        }
+
+        private bool CanPause() => IsPlaying;
+
+        partial void OnIsPlayingChanged(bool value)
+        {
+            PlayCommand.NotifyCanExecuteChanged();
+            PauseCommand.NotifyCanExecuteChanged();
         }
     }
 }
