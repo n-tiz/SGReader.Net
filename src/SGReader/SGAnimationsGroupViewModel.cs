@@ -11,13 +11,19 @@ namespace SGReader
 
         public IReadOnlyCollection<SGAnimationViewModel> Animations { get; }
 
-        public string Name => "TEST";
-        public string Description => $"Orientations: {_animationsGroup.Orientations}";
+        public string Name { get; }
+
+        public string Description { get; }
 
         public SGAnimationsGroupViewModel(SGAnimationsGroup animationsGroup)
         {
             _animationsGroup = animationsGroup;
-            Animations = _animationsGroup.Animations.Select(animation => new SGAnimationViewModel(animation)).ToList();
+            Animations = _animationsGroup.Animations
+                .Select(animation => new SGAnimationViewModel(animation))
+                .ToList();
+
+            Name = Animations.FirstOrDefault()?.Title ?? "Animation group";
+            Description = $"{_animationsGroup.Orientations} orientations · {_animationsGroup.SpritesByAnimation} frames";
         }
     }
 }

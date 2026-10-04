@@ -1,136 +1,258 @@
-﻿<Window x:Class="SGReader.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SGReader"
-        mc:Ignorable="d"
-        Title="SGReader.Net" Height="450" Width="800"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        TextElement.FontWeight="Regular"
-        TextElement.FontSize="13"
-        TextOptions.TextFormattingMode="Ideal"
-        TextOptions.TextRenderingMode="Auto"
-        Background="{DynamicResource MaterialDesignPaper}"
-        x:Name="Root"
-        Icon="Icon.png"
-        FontFamily="{DynamicResource MaterialDesignFont}" d:DataContext="{d:DesignInstance local:MainWindowViewModel}">
-    <materialDesign:DialogHost>
-        <materialDesign:DialogHost.DialogContent>
-            <ContentControl />
-        </materialDesign:DialogHost.DialogContent>
-        <DockPanel>
-            <materialDesign:ColorZone
-                Padding="16"
-                materialDesign:ShadowAssist.ShadowDepth="Depth2"
-                Mode="PrimaryMid"
-                DockPanel.Dock="Top">
-                <Grid>
-                    <StackPanel Orientation="Horizontal">
-                        <Button
-                            Margin="24,0,0,0"
-                            ToolTip="Open"
-                            Command="{Binding OpenCommand}"
-                            Style="{DynamicResource MaterialDesignToolButton}"
-                            Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type FrameworkElement}}, Path=(TextElement.Foreground)}">
-                            <Button.Content>
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="PlusBox" Height="24" Width="24" />
-                                    <TextBlock VerticalAlignment="Center">Open</TextBlock>
-                                </StackPanel>
-                            </Button.Content>
-                        </Button>
-                    </StackPanel>
+﻿<ui:FluentWindow x:Class="SGReader.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:local="clr-namespace:SGReader"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 mc:Ignorable="d"
+                 x:Name="Root"
+                 Title="SGReader"
+                 Width="1280"
+                 Height="800"
+                 MinWidth="960"
+                 MinHeight="640"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica"
+                 WindowCornerPreference="Round"
+                 d:DataContext="{d:DesignInstance local:MainWindowViewModel}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-                    <materialDesign:PopupBox
-                        DockPanel.Dock="Right"
-                        HorizontalAlignment="Right">
-                        <StackPanel>
-                            <Button
-                                Command="{Binding GoToGithubCommand}">
-                                <Button.Content>
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Github" Height="24" Width="24" />
-                                        <TextBlock VerticalAlignment="Center">Get source</TextBlock>
-                                    </StackPanel>
-                                </Button.Content>
-                            </Button>
-                            <Separator />
-                            <Button
-                                Content="Can't Touch This"
-                                IsEnabled="False" />
-                            <Separator />
-                            <Button
-                                Content="Can't Touch This"
-                                IsEnabled="False" />
+        <ui:TitleBar Grid.Row="0" Title="SGReader">
+            <ui:TitleBar.Icon>
+                <ui:SymbolIcon Symbol="ImageMultiple24" FontSize="18" />
+            </ui:TitleBar.Icon>
+            <ui:TitleBar.TrailingContent>
+                <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
+                    <ui:Button Appearance="Primary"
+                               Content="Open"
+                               Icon="{ui:SymbolIcon Symbol=FolderOpen24}"
+                               Command="{Binding OpenCommand}"
+                               Margin="0,0,8,0" />
+                    <ui:Button Appearance="Transparent"
+                               ToolTip="Source on GitHub"
+                               Icon="{ui:SymbolIcon Symbol=Code24}"
+                               Command="{Binding GoToGithubCommand}" />
+                </StackPanel>
+            </ui:TitleBar.TrailingContent>
+        </ui:TitleBar>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="268" MinWidth="220" MaxWidth="340" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Library -->
+            <Border Grid.Column="0"
+                    Background="{StaticResource AppSidebarBrush}"
+                    BorderBrush="{StaticResource AppDividerBrush}"
+                    BorderThickness="0,0,1,0">
+                <DockPanel Margin="14,10,14,14">
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,14">
+                        <ui:Button DockPanel.Dock="Right"
+                                   Appearance="Transparent"
+                                   ToolTip="Open SG2/SG3"
+                                   Icon="{ui:SymbolIcon Symbol=Add24}"
+                                   Command="{Binding OpenCommand}" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="LIBRARY"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Opacity="0.5" />
+                            <TextBlock Text="Opened files"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Margin="0,2,0,0" />
                         </StackPanel>
-                    </materialDesign:PopupBox>
+                    </DockPanel>
 
-                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                        <materialDesign:PackIcon HorizontalAlignment="Center"
-                                                 VerticalAlignment="Center"
-                                                 Kind="PalmTree" Height="32" Width="32" />
-                        <TextBlock
-                            HorizontalAlignment="Center"
+                    <TextBlock DockPanel.Dock="Bottom"
+                               Margin="4,12,4,0"
+                               FontSize="12"
+                               Foreground="{StaticResource AppSubtleTextBrush}"
+                               Text="SG2 / SG3 · Impressions Games"
+                               Opacity="0.8" />
+
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"
+                                    Margin="8">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasFiles}" Value="False">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <ui:SymbolIcon Symbol="FolderOpen24"
+                                           FontSize="28"
+                                           Opacity="0.35"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,10" />
+                            <TextBlock Text="No files yet"
+                                       Opacity="0.55"
+                                       HorizontalAlignment="Center" />
+                            <ui:Button Appearance="Transparent"
+                                       Content="Browse…"
+                                       Margin="0,8,0,0"
+                                       HorizontalAlignment="Center"
+                                       Command="{Binding OpenCommand}" />
+                        </StackPanel>
+
+                        <ListBox ItemsSource="{Binding LoadedFiles}"
+                                 SelectedItem="{Binding SelectedSGFile}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ItemContainerStyle="{StaticResource FileListItem}">
+                            <ListBox.Style>
+                                <Style TargetType="ListBox">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasFiles}" Value="False">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListBox.Style>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type local:SGFileViewModel}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0"
+                                                Width="40"
+                                                Height="40"
+                                                CornerRadius="8"
+                                                Background="{StaticResource CheckerBrush}"
+                                                ClipToBounds="True"
+                                                Margin="0,0,10,0">
+                                            <Grid>
+                                                <ui:SymbolIcon Symbol="Document24"
+                                                               Opacity="0.45"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding Thumbnail, Converter={StaticResource InverseNullToVisibilityConverter}}" />
+                                                <Image Source="{Binding Thumbnail}"
+                                                       Stretch="Uniform"
+                                                       Margin="3"
+                                                       SnapsToDevicePixels="True"
+                                                       UseLayoutRounding="True"
+                                                       RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                                       Visibility="{Binding Thumbnail, Converter={StaticResource NullToVisibilityConverter}}" />
+                                            </Grid>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="White"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Description}"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource AppSubtleTextBrush}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+
+                                        <ui:Button Grid.Column="2"
+                                                   Appearance="Transparent"
+                                                   ToolTip="Close"
+                                                   VerticalAlignment="Center"
+                                                   Focusable="False"
+                                                   Command="{Binding DataContext.CloseFileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                   CommandParameter="{Binding}"
+                                                   Icon="{ui:SymbolIcon Symbol=Dismiss24}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </DockPanel>
+            </Border>
+
+            <!-- Workspace -->
+            <Grid Grid.Column="1" Background="{StaticResource AppPaneBrush}">
+                <StackPanel HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            FontSize="26"
-                            Text="SGReader.Net" />
-                    </StackPanel>
-                </Grid>
-            </materialDesign:ColorZone>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MinWidth="200" MaxWidth="400" />
-                    <ColumnDefinition Width="5" />
-                    <ColumnDefinition Width="3*" />
-                </Grid.ColumnDefinitions>
-                <ListView HorizontalAlignment="Stretch"
-                          ItemsSource="{Binding LoadedFiles}"
-                          SelectedItem="{Binding SelectedSGFile}"
-                          Grid.ColumnSpan="1" SelectionMode="Single">
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type local:SGFileViewModel}">
-                            <Border
-                                x:Name="Border"
-                                Padding="8"
-                                BorderThickness="0 0 0 1"
-                                BorderBrush="{DynamicResource MaterialDesignDivider}">
-                                <Grid>
-                                    <StackPanel
-                                        Margin="8 0 0 0">
-                                        <TextBlock
-                                            Text="{Binding Name}"
-                                            FontWeight="Bold" />
-                                        <TextBlock
-                                            Text="{Binding Description}" />
-                                    </StackPanel>
-                                    <Button
-                                        HorizontalAlignment="Right"
-                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                        ToolTip="Close"
-                                        Command="{Binding DataContext.CloseCommand, ElementName=Root}"
-                                        CommandParameter="{Binding}">
-                                        <materialDesign:PackIcon Kind="Close" />
-                                    </Button>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ListView>
-                <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
-                <TextBlock Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"
-                           Opacity="0.7">
-                    No file selected.
-                </TextBlock>
-                <local:SGFileView DataContext="{Binding SelectedSGFile}" Grid.Column="2" Margin="10"
-                                  Visibility="{Binding Converter={StaticResource NullableToVisibilityConverter}}" />
+                            Visibility="{Binding SelectedSGFile, Converter={StaticResource InverseNullToVisibilityConverter}}">
+                    <Border Width="76"
+                            Height="76"
+                            CornerRadius="20"
+                            Background="#22FFFFFF"
+                            Margin="0,0,0,18">
+                        <ui:SymbolIcon Symbol="ImageMultiple24"
+                                       FontSize="34"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="Browse city-building sprites"
+                               FontSize="26"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Open an SG2 or SG3 archive to explore animations, orientations and frames."
+                               Margin="0,8,0,22"
+                               Foreground="{StaticResource AppSubtleTextBrush}"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               MaxWidth="420"
+                               TextWrapping="Wrap" />
+                    <ui:Button Appearance="Primary"
+                               Content="Open SG file"
+                               Icon="{ui:SymbolIcon Symbol=FolderOpen24}"
+                               HorizontalAlignment="Center"
+                               Command="{Binding OpenCommand}" />
+                </StackPanel>
+
+                <local:SGFileView DataContext="{Binding SelectedSGFile}"
+                                  Visibility="{Binding Converter={StaticResource NullToVisibilityConverter}}" />
             </Grid>
-        </DockPanel>
-    </materialDesign:DialogHost>
-</Window>
+        </Grid>
+
+        <!-- Loading overlay -->
+        <Grid Grid.RowSpan="2"
+              Panel.ZIndex="100"
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Background="#99000000" />
+            <Border HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    MinWidth="280"
+                    Padding="28,24"
+                    CornerRadius="14"
+                    Background="{StaticResource AppCardBrush}"
+                    BorderBrush="{StaticResource AppDividerBrush}"
+                    BorderThickness="1">
+                <StackPanel HorizontalAlignment="Center">
+                    <ui:ProgressRing IsIndeterminate="True"
+                                     Width="48"
+                                     Height="48"
+                                     HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding LoadingMessage}"
+                               Margin="0,16,0,0"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               MaxWidth="260" />
+                    <TextBlock Text="Decoding sprites…"
+                               Margin="0,6,0,0"
+                               FontSize="12"
+                               Foreground="{StaticResource AppSubtleTextBrush}"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</ui:FluentWindow>

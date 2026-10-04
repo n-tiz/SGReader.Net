@@ -3,76 +3,86 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:SGReader"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:animations="clr-namespace:SGReader.Animations"
              mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800"
+             d:DesignHeight="420"
+             d:DesignWidth="260"
              d:DataContext="{d:DesignInstance animations:AnimationPlayerViewModel}">
     <Grid>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition Height="50" />
-            </Grid.RowDefinitions>
-            <Border VerticalAlignment="Top" Background="White">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" SharedSizeGroup="Row" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" SharedSizeGroup="Column" />
-                    </Grid.ColumnDefinitions>
-                    <Image Source="{Binding CurrentSprite.Bitmap}" Stretch="None"
-                           Width="200" Height="200"
-                           VerticalAlignment="Center" HorizontalAlignment="Center" />
-                </Grid>
-            </Border>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" MinHeight="220" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-            <StackPanel
-                HorizontalAlignment="Left"
-                Orientation="Horizontal"
-                Margin="0" Grid.Row="1">
-                <Button
-                    Style="{StaticResource MaterialDesignIconButton}"
-                    Width="30"
-                    Height="30"
-                    Command="{Binding PlayCommand}"
-                    Margin="2"
-                    materialDesign:RippleAssist.IsCentered="True">
-                    <materialDesign:PackIcon Kind="Play" />
-                </Button>
-                <Button
-                    Style="{StaticResource MaterialDesignIconButton}"
-                    Width="30"
-                    Height="30"
-                    Command="{Binding PauseCommand}"
-                    Margin="2"
-                    materialDesign:RippleAssist.IsCentered="True">
-                    <materialDesign:PackIcon Kind="Pause" />
-                </Button>
-                <DockPanel>
-                    <Slider
-                        Value="{Binding Frame}"
+        <Border Grid.Row="0"
+                Background="{StaticResource CheckerBrush}"
+                BorderBrush="{StaticResource AppDividerBrush}"
+                BorderThickness="1"
+                CornerRadius="14"
+                ClipToBounds="True">
+            <Grid>
+                <TextBlock Text="{Binding StatusLabel}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource AppSubtleTextBrush}"
+                           Visibility="{Binding CurrentSprite, Converter={StaticResource InverseNullToVisibilityConverter}}" />
+                <Image Source="{Binding CurrentSprite.Bitmap}"
+                       Stretch="Uniform"
+                       Margin="16"
+                       SnapsToDevicePixels="True"
+                       UseLayoutRounding="True"
+                       RenderOptions.BitmapScalingMode="NearestNeighbor"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <StackPanel Grid.Row="1" Margin="0,14,0,0">
+            <UniformGrid Columns="2">
+                <ui:Button Appearance="Primary"
+                           Height="38"
+                           Margin="0,0,6,0"
+                           Content="Play / Pause"
+                           Icon="{ui:SymbolIcon Symbol=Play24}"
+                           Command="{Binding TogglePlayCommand}" />
+                <ui:Button Appearance="Secondary"
+                           Height="38"
+                           Margin="6,0,0,0"
+                           Content="Save"
+                           Icon="{ui:SymbolIcon Symbol=Save24}"
+                           ToolTip="Export coming soon" />
+            </UniformGrid>
+        </StackPanel>
+
+        <Border Grid.Row="2"
+                Margin="0,14,0,0"
+                Padding="12"
+                CornerRadius="12"
+                Background="{StaticResource AppCardBrush}"
+                BorderBrush="{StaticResource AppDividerBrush}"
+                BorderThickness="1">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,8">
+                    <TextBlock Text="Frame duration"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center" />
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding Frame, StringFormat={}{0:0.00}s}"
+                               Foreground="{StaticResource AppSubtleTextBrush}"
+                               VerticalAlignment="Center" />
+                </DockPanel>
+                <Slider Value="{Binding Frame}"
                         Minimum="{Binding MinimumFrame}"
-                        Width="100"
-                        Margin="2"
                         Maximum="{Binding MaximumFrame}"
                         TickFrequency="{Binding TickFrequency}"
-                        TickPlacement="None" VerticalAlignment="Center" DockPanel.Dock="Bottom" />
-                    <TextBlock Text="Frame:" VerticalAlignment="Center" HorizontalAlignment="Right" Width="45"
-                               Foreground="{StaticResource MaterialDesignDarkForeground}" />
-                    <TextBox Text="{Binding Frame}" VerticalAlignment="Center" HorizontalAlignment="Center" Width="45" />
-                </DockPanel>
+                        IsSnapToTickEnabled="True" />
+                <TextBlock Margin="0,8,0,0"
+                           FontSize="11"
+                           Foreground="{StaticResource AppSubtleTextBrush}"
+                           Text="Lower values play the animation faster." />
             </StackPanel>
-            <Button
-                Grid.Row="1"
-                Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Margin="0 -20 6 0">
-                <materialDesign:PackIcon Kind="Floppy" />
-            </Button>
-        </Grid>
+        </Border>
     </Grid>
 </UserControl>

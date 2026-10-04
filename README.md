@@ -7,6 +7,8 @@ Another program to extract sprites from the Impressions Games citybuilding games
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - Windows (WPF + `System.Drawing`)
 
+UI stack: [WPF-UI](https://github.com/lepoco/wpfui) + CommunityToolkit.Mvvm.
+
 ## Build
 
 ```bash

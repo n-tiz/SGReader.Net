@@ -6,14 +6,14 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace SGReader.Animations
 {
-    public partial class AnimationPlayerViewModel : ObservableObject
+    public partial class AnimationPlayerViewModel : ObservableObject, IDisposable
     {
         public double MinimumFrame => 0.01;
         public double MaximumFrame => 0.1;
         public double TickFrequency => 0.01;
 
         private readonly DispatcherTimer _timer;
-        private readonly DateTime _start;
+        private DateTime _start = DateTime.Now;
 
         [ObservableProperty]
         private double _frame = 0.06;
@@ -21,18 +21,18 @@ namespace SGReader.Animations
         [ObservableProperty]
         private bool _isPlaying = true;
 
+        [ObservableProperty]
+        private SGAnimationViewModel _animation;
+
         public AnimationPlayerViewModel()
         {
-            _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(60), DispatcherPriority.Render, TimerCallback, App.Current.Dispatcher);
+            _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(33), DispatcherPriority.Render, TimerCallback, App.Current.Dispatcher);
             _timer.Start();
-            _start = DateTime.Now;
         }
-
-        public SGAnimationViewModel Animation { get; set; }
 
         private void TimerCallback(object sender, EventArgs e)
         {
-            if (IsPlaying)
+            if (IsPlaying && Animation != null)
                 OnPropertyChanged(nameof(CurrentSprite));
         }
 
@@ -41,34 +41,46 @@ namespace SGReader.Animations
             get
             {
                 var count = Animation?.Sprites.Count ?? 0;
-                if (count == 0) return null;
+                if (count == 0)
+                    return null;
+
                 double fullTime = count * Frame;
+                if (fullTime <= 0)
+                    return Animation.Sprites.FirstOrDefault();
+
                 var elapsedTime = (DateTime.Now - _start).TotalSeconds % fullTime;
                 var index = (int)(count * (elapsedTime / fullTime));
-                return Animation.Sprites.ElementAt(index);
+                return Animation.Sprites.ElementAt(Math.Clamp(index, 0, count - 1));
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanPlay))]
-        private void Play()
+        public string StatusLabel => Animation == null
+            ? "Select an animation"
+            : IsPlaying ? "Playing" : "Paused";
+
+        partial void OnAnimationChanged(SGAnimationViewModel value)
         {
-            IsPlaying = true;
+            _start = DateTime.Now;
+            OnPropertyChanged(nameof(CurrentSprite));
+            OnPropertyChanged(nameof(StatusLabel));
         }
 
-        private bool CanPlay() => !IsPlaying;
-
-        [RelayCommand(CanExecute = nameof(CanPause))]
-        private void Pause()
+        [RelayCommand]
+        private void TogglePlay()
         {
-            IsPlaying = false;
+            IsPlaying = !IsPlaying;
+            if (IsPlaying)
+                _start = DateTime.Now;
         }
-
-        private bool CanPause() => IsPlaying;
 
         partial void OnIsPlayingChanged(bool value)
         {
-            PlayCommand.NotifyCanExecuteChanged();
-            PauseCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(StatusLabel));
+        }
+
+        public void Dispose()
+        {
+            _timer.Stop();
         }
     }
 }
