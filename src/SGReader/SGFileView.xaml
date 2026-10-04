@@ -91,10 +91,13 @@
                                                         ClipToBounds="True">
                                                     <Image Source="{Binding Preview.Bitmap}"
                                                            Stretch="Uniform"
+                                                           StretchDirection="DownOnly"
                                                            Margin="8"
                                                            SnapsToDevicePixels="True"
                                                            UseLayoutRounding="True"
-                                                           RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                                           RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
                                                 </Border>
                                                 <TextBlock Margin="0,8,0,0"
                                                            Text="{Binding Title}"
