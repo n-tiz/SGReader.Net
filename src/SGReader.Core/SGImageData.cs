@@ -23,15 +23,18 @@ namespace SGReader.Core
             reader.Skip(10);
             IsAnimationReversible = Convert.ToBoolean(reader.ReadByte());
             reader.Skip(1);
+
+            // Pecunia: quint16 type, then 4 flag bytes (flags[0]=external, flags[3]=iso tile size)
             Type = reader.ReadByte();
             IsDataFullyCompressed = Convert.ToBoolean(reader.ReadByte());
-            IsDataExternal = Convert.ToBoolean(reader.ReadByte());
-            IsImagePartlyCompressed = Convert.ToBoolean(reader.ReadByte());
-            reader.Skip(2);
+            Flags = reader.ReadBytes(4);
+            IsDataExternal = Flags[0] != 0;
+            IsImagePartlyCompressed = Flags[1] != 0;
+
             BitmapId = reader.ReadByte();
             reader.Skip(1);
             AnimationSpeedId = reader.ReadByte();
-            reader.Skip(5); //Skip 7 bytes
+            reader.Skip(5);
 
             if (includeAlpha)
             {
@@ -44,7 +47,6 @@ namespace SGReader.Core
                 AlphaLength = 0;
             }
         }
-
 
         public uint Offset { get; }
         public uint Length { get; }
@@ -59,12 +61,12 @@ namespace SGReader.Core
         public bool IsAnimationReversible { get; }
         public byte Type { get; }
         public bool IsDataFullyCompressed { get; }
+        public byte[] Flags { get; }
         public bool IsDataExternal { get; }
         public bool IsImagePartlyCompressed { get; }
         public byte BitmapId { get; }
         public byte AnimationSpeedId { get; }
         public uint AlphaOffset { get; }
         public uint AlphaLength { get; }
-
     }
 }

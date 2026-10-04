@@ -7,8 +7,6 @@ namespace SGReader
 {
     public class SGAnimationsGroupViewModel : ObservableObject
     {
-        private readonly SGAnimationsGroup _animationsGroup;
-
         public IReadOnlyCollection<SGAnimationViewModel> Animations { get; }
 
         public string Name { get; }
@@ -16,14 +14,40 @@ namespace SGReader
         public string Description { get; }
 
         public SGAnimationsGroupViewModel(SGAnimationsGroup animationsGroup)
+            : this(
+                animationsGroup.Animations.Select(animation => new SGAnimationViewModel(animation)).ToList(),
+                animationsGroup.Animations.FirstOrDefault() is { } first
+                    ? new SGAnimationViewModel(first).Title
+                    : "Animation group",
+                $"{animationsGroup.Orientations} orientations · {animationsGroup.SpritesByAnimation} frames")
         {
-            _animationsGroup = animationsGroup;
-            Animations = _animationsGroup.Animations
-                .Select(animation => new SGAnimationViewModel(animation))
+        }
+
+        private SGAnimationsGroupViewModel(IReadOnlyCollection<SGAnimationViewModel> animations, string name, string description)
+        {
+            Animations = animations;
+            Name = name;
+            Description = description;
+        }
+
+        public static SGAnimationsGroupViewModel FromBitmap(SGBitmap bitmap)
+        {
+            var animations = bitmap.Images
+                .Where(image => image.Width > 0 && image.Height > 0)
+                .Select(image =>
+                {
+                    var animation = new SGAnimation(new List<SGImage> { image })
+                    {
+                        Name = $"{bitmap.Name} #{image.Id}"
+                    };
+                    return new SGAnimationViewModel(animation);
+                })
                 .ToList();
 
-            Name = Animations.FirstOrDefault()?.Title ?? "Animation group";
-            Description = $"{_animationsGroup.Orientations} orientations · {_animationsGroup.SpritesByAnimation} frames";
+            return new SGAnimationsGroupViewModel(
+                animations,
+                string.IsNullOrWhiteSpace(bitmap.Name) ? $"Bitmap {bitmap.Id}" : bitmap.Name,
+                $"{animations.Count} images");
         }
     }
 }

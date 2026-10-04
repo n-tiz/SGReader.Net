@@ -5,6 +5,7 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using SGReader.Animations;
 using SGReader.Core;
+using SGReader.Helpers;
 
 namespace SGReader
 {
@@ -19,13 +20,30 @@ namespace SGReader
             Name = _sgFile.Name;
             VersionLabel = FormatVersion(_sgFile.Header.Version);
             ImageCount = _sgFile.Images.Count;
-            AnimationGroupCount = _sgFile.AnimationsGroups.Count;
-            Description = $"{AnimationGroupCount} groups · {ImageCount} images";
+            TypesLabel = SGImageTypeHelper.FormatTypes(_sgFile.Images.Select(i => i.Type));
 
             foreach (var animation in sgFile.AnimationsGroups)
             {
-                AnimationsGroups.Add(new SGAnimationsGroupViewModel(animation));
+                var group = new SGAnimationsGroupViewModel(animation);
+                if (group.Animations.Count > 0)
+                    AnimationsGroups.Add(group);
             }
+
+            // Stat / static SG files have images but no usable animation metadata.
+            if (AnimationsGroups.Count == 0)
+            {
+                foreach (var bitmap in sgFile.Bitmaps.Where(b => b.Images.Any(i => i.Width > 0 && i.Height > 0)))
+                {
+                    var group = SGAnimationsGroupViewModel.FromBitmap(bitmap);
+                    if (group.Animations.Count > 0)
+                        AnimationsGroups.Add(group);
+                }
+            }
+
+            AnimationGroupCount = AnimationsGroups.Count;
+            Description = AnimationsGroups.Count > 0 && sgFile.AnimationsGroups.Count == 0
+                ? $"{AnimationGroupCount} bitmaps · {ImageCount} images"
+                : $"{AnimationGroupCount} groups · {ImageCount} images";
 
             Thumbnail = PickThumbnail();
             SelectedAnimation = AnimationsGroups.SelectMany(g => g.Animations).FirstOrDefault();
@@ -56,6 +74,8 @@ namespace SGReader
 
         public string VersionLabel { get; }
 
+        public string TypesLabel { get; }
+
         public int ImageCount { get; }
 
         public int AnimationGroupCount { get; }
@@ -77,14 +97,13 @@ namespace SGReader
 
         private BitmapImage PickThumbnail()
         {
-            var fromAnimations = AnimationsGroups
-                .SelectMany(group => group.Animations)
-                .SelectMany(animation => animation.Sprites)
-                .Select(sprite => sprite.Bitmap)
-                .FirstOrDefault(bitmap => bitmap != null);
-
-            if (fromAnimations != null)
-                return fromAnimations;
+            // Only decode animation previews until we find a usable one.
+            foreach (var animation in AnimationsGroups.SelectMany(group => group.Animations))
+            {
+                var preview = animation.Preview;
+                if (preview?.Bitmap != null)
+                    return preview.Bitmap;
+            }
 
             foreach (var image in _sgFile.Images)
             {

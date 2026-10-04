@@ -109,6 +109,12 @@
                                                            FontSize="11"
                                                            Foreground="{StaticResource AppSubtleTextBrush}"
                                                            HorizontalAlignment="Center" />
+                                                <TextBlock Text="{Binding TypeLabel}"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource AppSubtleTextBrush}"
+                                                           Opacity="0.8"
+                                                           HorizontalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
@@ -159,6 +165,7 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" Foreground="{StaticResource AppSubtleTextBrush}" Margin="0,0,0,6" />
@@ -167,11 +174,14 @@
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Bitmap" Foreground="{StaticResource AppSubtleTextBrush}" Margin="0,0,0,6" />
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedAnimation.BitmapName}" TextTrimming="CharacterEllipsis" Margin="0,0,0,6" />
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Frames" Foreground="{StaticResource AppSubtleTextBrush}" Margin="0,0,0,6" />
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedAnimation.Description}" Margin="0,0,0,6" />
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Type" Foreground="{StaticResource AppSubtleTextBrush}" Margin="0,0,0,6" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedAnimation.TypeLabel}" TextTrimming="CharacterEllipsis" Margin="0,0,0,6" />
 
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="IDs" Foreground="{StaticResource AppSubtleTextBrush}" />
-                            <TextBlock Grid.Row="3" Grid.Column="1"
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Frames" Foreground="{StaticResource AppSubtleTextBrush}" Margin="0,0,0,6" />
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedAnimation.Description}" Margin="0,0,0,6" />
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="IDs" Foreground="{StaticResource AppSubtleTextBrush}" />
+                            <TextBlock Grid.Row="4" Grid.Column="1"
                                        Text="{Binding SelectedAnimation.FullDescription}"
                                        TextWrapping="Wrap"
                                        Opacity="0.9" />

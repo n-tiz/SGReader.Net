@@ -53,7 +53,8 @@
                            Margin="6,0,0,0"
                            Content="Save"
                            Icon="{ui:SymbolIcon Symbol=Save24}"
-                           ToolTip="Export coming soon" />
+                           ToolTip="Save current frame as PNG"
+                           Command="{Binding SaveFrameCommand}" />
             </UniformGrid>
         </StackPanel>
 

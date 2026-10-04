@@ -1,8 +1,11 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 
 namespace SGReader.Animations
 {
@@ -33,7 +36,10 @@ namespace SGReader.Animations
         private void TimerCallback(object sender, EventArgs e)
         {
             if (IsPlaying && Animation != null)
+            {
                 OnPropertyChanged(nameof(CurrentSprite));
+                SaveFrameCommand.NotifyCanExecuteChanged();
+            }
         }
 
         public SGImageViewModel CurrentSprite
@@ -63,6 +69,7 @@ namespace SGReader.Animations
             _start = DateTime.Now;
             OnPropertyChanged(nameof(CurrentSprite));
             OnPropertyChanged(nameof(StatusLabel));
+            SaveFrameCommand.NotifyCanExecuteChanged();
         }
 
         [RelayCommand]
@@ -73,9 +80,35 @@ namespace SGReader.Animations
                 _start = DateTime.Now;
         }
 
+        [RelayCommand(CanExecute = nameof(CanSaveFrame))]
+        private void SaveFrame()
+        {
+            var sprite = CurrentSprite;
+            if (sprite?.Bitmap == null)
+                return;
+
+            var dlg = new SaveFileDialog
+            {
+                Filter = "PNG image|*.png",
+                FileName = $"{Animation?.Title ?? "frame"}_{sprite.Id:D5}.png",
+                DefaultExt = ".png"
+            };
+
+            if (dlg.ShowDialog() != true)
+                return;
+
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(sprite.Bitmap));
+            using var stream = File.Create(dlg.FileName);
+            encoder.Save(stream);
+        }
+
+        private bool CanSaveFrame() => CurrentSprite?.Bitmap != null;
+
         partial void OnIsPlayingChanged(bool value)
         {
             OnPropertyChanged(nameof(StatusLabel));
+            SaveFrameCommand.NotifyCanExecuteChanged();
         }
 
         public void Dispose()

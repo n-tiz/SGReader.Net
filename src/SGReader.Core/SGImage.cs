@@ -29,6 +29,7 @@ namespace SGReader.Core
         public int BitmapId => _workData?.BitmapId ?? _data.BitmapId;
         public int Width => _workData.Width;
         public int Height => _workData.Height;
+        public byte Type => _workData.Type;
         public int AnimationSprites => _workData.NumberOfAnimationSprites;
         public int Orientations => _workData.NumberOfOrientations;
 
@@ -108,35 +109,41 @@ namespace SGReader.Core
 
         private byte[] FillBuffer()
         {
-            var file = Parent.OpenFile(_workData.IsDataExternal);
-            if (file == null)
-            {
+            if (Parent == null)
                 throw new InvalidSGImageException("Unable to open 555 file", this);
-            }
 
-            int dataLength = (int) (_workData.Length + _workData.AlphaLength);
-            if (dataLength <= 0)
+            lock (Parent.SyncRoot)
             {
-                throw new InvalidSGImageException($"Invalid data length: {dataLength}", this); // not an error per se ?
-            }
-            byte[] buffer = new byte[dataLength];
-
-            // Somehow externals have 1 byte added to their offset
-            file.Seek(_workData.Offset - (_workData.IsDataExternal ? 1 : 0), SeekOrigin.Begin);
-
-            int dataRead = file.Read(buffer, 0, dataLength);
-            if (dataLength != dataRead)
-            {
-                if (dataRead + 4 == dataLength && file.Position == file.Length)
+                var file = Parent.OpenFile(_workData.IsDataExternal);
+                if (file == null)
                 {
-                    // Exception for some C3 graphics: last image is 'missing' 4 bytes
-                    buffer[dataRead] = buffer[dataRead + 1] = 0;
-                    buffer[dataRead + 2] = buffer[dataRead + 3] = 0;
+                    throw new InvalidSGImageException("Unable to open 555 file", this);
                 }
-                else
-                    throw new InvalidSGImageException($"Unable to read {dataLength} bytes from file (read {dataRead} bytes)", this);
+
+                int dataLength = (int)(_workData.Length + _workData.AlphaLength);
+                if (dataLength <= 0)
+                {
+                    throw new InvalidSGImageException($"Invalid data length: {dataLength}", this);
+                }
+                byte[] buffer = new byte[dataLength];
+
+                // Somehow externals have 1 byte added to their offset
+                file.Seek(_workData.Offset - (_workData.IsDataExternal ? 1 : 0), SeekOrigin.Begin);
+
+                int dataRead = file.Read(buffer, 0, dataLength);
+                if (dataLength != dataRead)
+                {
+                    if (dataRead + 4 == dataLength && file.Position == file.Length)
+                    {
+                        // Exception for some C3 graphics: last image is 'missing' 4 bytes
+                        buffer[dataRead] = buffer[dataRead + 1] = 0;
+                        buffer[dataRead + 2] = buffer[dataRead + 3] = 0;
+                    }
+                    else
+                        throw new InvalidSGImageException($"Unable to read {dataLength} bytes from file (read {dataRead} bytes)", this);
+                }
+                return buffer;
             }
-            return buffer;
         }
 
         private void LoadPlainImage(FastBitmap result, byte[] buffer)
@@ -203,97 +210,96 @@ namespace SGReader.Core
 
         private void WriteIsometricBase(FastBitmap result, byte[] buffer)
         {
-            throw new NotImplementedException();
-            //int size = _workData.Flags[3];
-            //int tileBytes, tileHeight, tileWidth;
+            int size = _workData.Flags[3];
+            int tileBytes, tileHeight, tileWidth;
 
-            //int width = result.Width;
-            //var height = (width + 2) / 2;
-            //var heightOffset = result.Height - height;
-            //var yOffset = heightOffset;
+            int width = result.Width;
+            var height = (width + 2) / 2;
+            var heightOffset = result.Height - height;
+            var yOffset = heightOffset;
 
-            //if (size == 0)
-            //{
-            //    /* Derive the tile size from the height (more regular than width) */
-            //    /* Note that this causes a problem with 4x4 regular vs 3x3 large: */
-            //    /* 4 * 30 = 120; 3 * 40 = 120 -- give precedence to regular */
-            //    if (height % IsometricTileHeight == 0)
-            //    {
-            //        size = height / IsometricTileHeight;
-            //    }
-            //    else if (height % IsometricLargeTileHeight == 0)
-            //    {
-            //        size = height / IsometricLargeTileHeight;
-            //    }
-            //}
-            //if (size == 0)
-            //{
-            //    throw new InvalidSGImageException($"Unknown isometric tile size: height {height}", this);
-            //}
+            if (size == 0)
+            {
+                /* Derive the tile size from the height (more regular than width) */
+                /* Note that this causes a problem with 4x4 regular vs 3x3 large: */
+                /* 4 * 30 = 120; 3 * 40 = 120 -- give precedence to regular */
+                if (height % IsometricTileHeight == 0)
+                {
+                    size = height / IsometricTileHeight;
+                }
+                else if (height % IsometricLargeTileHeight == 0)
+                {
+                    size = height / IsometricLargeTileHeight;
+                }
+            }
+            if (size == 0)
+            {
+                throw new InvalidSGImageException($"Unknown isometric tile size: height {height}", this);
+            }
 
-            ///* Determine whether we should use the regular or large (emperor) tiles */
-            //if (IsometricTileHeight * size == height)
-            //{
-            //    /* Regular tile */
-            //    tileBytes = IsometricTileBytes;
-            //    tileHeight = IsometricTileHeight;
-            //    tileWidth = IsometricTileWidth;
-            //}
-            //else if (IsometricLargeTileHeight * size == height)
-            //{
-            //    /* Large (emperor) tile */
-            //    tileBytes = IsometricLargeTileBytes;
-            //    tileHeight = IsometricLargeTileHeight;
-            //    tileWidth = IsometricLargeTileWidth;
-            //}
-            //else
-            //    throw new InvalidSGImageException(
-            //        $"Unknown tile size: {2 * height / size} (height {height}, width {width}, size {size})", this);
+            /* Determine whether we should use the regular or large (emperor) tiles */
+            if (IsometricTileHeight * size == height)
+            {
+                tileBytes = IsometricTileBytes;
+                tileHeight = IsometricTileHeight;
+                tileWidth = IsometricTileWidth;
+            }
+            else if (IsometricLargeTileHeight * size == height)
+            {
+                tileBytes = IsometricLargeTileBytes;
+                tileHeight = IsometricLargeTileHeight;
+                tileWidth = IsometricLargeTileWidth;
+            }
+            else
+            {
+                throw new InvalidSGImageException(
+                    $"Unknown tile size: {2 * height / size} (height {height}, width {width}, size {size})", this);
+            }
 
-            ///* Check if buffer length is enough: (width + 2) * height / 2 * 2bpp */
-            //if ((width + 2) * height != (int)_workData.UncompressedLength)
-            //    throw new InvalidSGImageException(
-            //        $"Data length doesn't match footprint size: {(width + 2) * height} vs {_workData.UncompressedLength} ({_workData.Length}) {_workData.InvertOffset}",
-            //        this);
+            /* Check if buffer length is enough: (width + 2) * height / 2 * 2bpp */
+            if ((width + 2) * height != (int)_workData.UncompressedLength)
+            {
+                throw new InvalidSGImageException(
+                    $"Data length doesn't match footprint size: {(width + 2) * height} vs {_workData.UncompressedLength} ({_workData.Length}) {_workData.InvertOffset}",
+                    this);
+            }
 
-            //int  i = 0;
-            //for (int y = 0; y < (size + (size - 1)); y++)
-            //{
-            //    var xOffset = (y < size ? (size - y - 1) : (y - size + 1)) * tileHeight;
-            //    int x;
-            //    for (x = 0; x < (y < size ? y + 1 : 2 * size - y - 1); x++, i++)
-            //    {
-            //        WriteIsometricTile(result, buffer.Skip(i * tileBytes).ToArray(),
-            //            xOffset, yOffset, tileWidth, tileHeight);
-            //        xOffset += tileWidth + 2;
-            //    }
-            //    yOffset += tileHeight / 2;
-            //}
+            int i = 0;
+            for (int y = 0; y < (size + (size - 1)); y++)
+            {
+                var xOffset = (y < size ? (size - y - 1) : (y - size + 1)) * tileHeight;
+                for (int x = 0; x < (y < size ? y + 1 : 2 * size - y - 1); x++, i++)
+                {
+                    WriteIsometricTile(result, buffer, i * tileBytes, xOffset, yOffset, tileWidth, tileHeight);
+                    xOffset += tileWidth + 2;
+                }
+                yOffset += tileHeight / 2;
+            }
         }
 
-        private void WriteIsometricTile(FastBitmap result, byte[] buffer, int xOffset, int yOffset, int tileWidth, int tileHeight)
+        private void WriteIsometricTile(FastBitmap result, byte[] buffer, int bufferOffset, int xOffset, int yOffset, int tileWidth, int tileHeight)
         {
             int halfHeight = tileHeight / 2;
-            int x, y, i = 0;
+            int i = bufferOffset;
 
-            for (y = 0; y < halfHeight; y++)
+            for (int y = 0; y < halfHeight; y++)
             {
                 int start = tileHeight - 2 * (y + 1);
                 int end = tileWidth - start;
-                for (x = start; x < end; x++, i += 2)
+                for (int x = start; x < end; x++, i += 2)
                 {
                     Set555Pixel(result, xOffset + x, yOffset + y,
-                        (ushort) ((buffer[i + 1] << 8) | buffer[i]));
+                        (ushort)((buffer[i + 1] << 8) | buffer[i]));
                 }
             }
-            for (y = halfHeight; y < tileHeight; y++)
+            for (int y = halfHeight; y < tileHeight; y++)
             {
                 int start = 2 * y - tileHeight;
                 int end = tileWidth - start;
-                for (x = start; x < end; x++, i += 2)
+                for (int x = start; x < end; x++, i += 2)
                 {
                     Set555Pixel(result, xOffset + x, yOffset + y,
-                        (ushort) ((buffer[i + 1] << 8) | buffer[i]));
+                        (ushort)((buffer[i + 1] << 8) | buffer[i]));
                 }
             }
         }

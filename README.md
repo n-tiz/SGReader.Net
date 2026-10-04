@@ -1,6 +1,6 @@
 # SGReader.Net
 
-Another program to extract sprites from the Impressions Games citybuilding games based on Pecunia SGReader (https://github.com/bvschaik/citybuilding-tools).
+Extract sprites from the Impressions Games city-building titles (Caesar III, Pharaoh, Zeus, Emperor, etc.), inspired by [Pecunia SGReader](https://github.com/bvschaik/citybuilding-tools).
 
 ## Requirements
 
@@ -15,9 +15,22 @@ UI stack: [WPF-UI](https://github.com/lepoco/wpfui) + CommunityToolkit.Mvvm.
 dotnet build src/SGReader.sln -c Release
 ```
 
-## Run
+## UI
 
 ```bash
 dotnet run --project src/SGReader -c Release
-dotnet run --project src/SGReader.CLI -c Release -- <file.sg2|sg3>
 ```
+
+Open `.sg2` / `.sg3` files (keep matching `.555` files next to them, or in a `555/` subfolder).
+
+## CLI
+
+```bash
+# List file info
+dotnet run --project src/SGReader.CLI -c Release -- path\to\file.sg3 --list
+
+# Extract all sprites to PNGs
+dotnet run --project src/SGReader.CLI -c Release -- path\to\file.sg3 -o path\to\output
+```
+
+Default output directory is `./<sg-name>/`, with one subfolder per bitmap.

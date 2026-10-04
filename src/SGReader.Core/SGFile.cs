@@ -18,6 +18,8 @@ namespace SGReader.Core
 
         public IReadOnlyList<SGImage> Images => _images;
 
+        public IReadOnlyList<SGBitmap> Bitmaps => _bitmaps;
+
         public IReadOnlyList<SGAnimationsGroup> AnimationsGroups => _animationsGroups;
 
         public SGHeader Header { get; private set; }
