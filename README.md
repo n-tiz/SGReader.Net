@@ -21,6 +21,26 @@ UI stack: [WPF-UI](https://github.com/lepoco/wpfui) + CommunityToolkit.Mvvm.
 dotnet build src/SGReader.sln -c Release
 ```
 
+## Publish (single .exe)
+
+**Visual Studio**
+
+1. Clic droit sur le projet `SGReader` → **Publier…**
+2. Choisir le profil **FolderProfile** (ou Dossier / Folder)
+3. **Publier**
+
+Sortie : `publish/SGReader-1.0.0.exe`
+
+**CLI**
+
+```bash
+dotnet publish src/SGReader/SGReader.csproj -c Release -o publish -p:PublishSingleFile=true -p:SelfContained=false
+```
+
+Framework-dependent win-x64 (~7 MB). Requires [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0).
+
+Bump `<Version>` in `src/SGReader/SGReader.csproj` to change the exe name (`SGReader-<version>.exe`).
+
 ## UI
 
 ```bash
