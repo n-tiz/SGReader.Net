@@ -12,11 +12,6 @@ namespace SGReader
     public class SGImageViewModel : ObservableObject
     {
         private readonly SGImage _image;
-        private readonly int _canvasWidth;
-        private readonly int _canvasHeight;
-        private readonly int _drawX;
-        private readonly int _drawY;
-        private readonly bool _alignToCanvas;
         private BitmapImage _bitmap;
         private bool _decodeAttempted;
 
@@ -29,19 +24,27 @@ namespace SGReader
         public short XOffset => _image.XOffset;
         public short YOffset => _image.YOffset;
 
+        /// <summary>Shared animation stage width (hotspot-aligned), not the sprite pixel size.</summary>
+        public int LayoutWidth { get; }
+
+        /// <summary>Shared animation stage height (hotspot-aligned), not the sprite pixel size.</summary>
+        public int LayoutHeight { get; }
+
+        public int DrawX { get; }
+        public int DrawY { get; }
+
         public SGImageViewModel(SGImage image)
+            : this(image, image.Width, image.Height, 0, 0)
         {
-            _image = image;
         }
 
-        public SGImageViewModel(SGImage image, int canvasWidth, int canvasHeight, int drawX, int drawY)
+        public SGImageViewModel(SGImage image, int layoutWidth, int layoutHeight, int drawX, int drawY)
         {
             _image = image;
-            _canvasWidth = canvasWidth;
-            _canvasHeight = canvasHeight;
-            _drawX = drawX;
-            _drawY = drawY;
-            _alignToCanvas = true;
+            LayoutWidth = Math.Max(1, layoutWidth);
+            LayoutHeight = Math.Max(1, layoutHeight);
+            DrawX = drawX;
+            DrawY = drawY;
         }
 
         public BitmapImage Bitmap
@@ -78,20 +81,8 @@ namespace SGReader
                 if (source == null)
                     return;
 
-                if (_alignToCanvas && _canvasWidth > 0 && _canvasHeight > 0)
-                {
-                    using var canvas = new Bitmap(_canvasWidth, _canvasHeight, PixelFormat.Format32bppArgb);
-                    using (var graphics = Graphics.FromImage(canvas))
-                    {
-                        graphics.Clear(Color.Transparent);
-                        graphics.DrawImageUnscaled(source, _drawX, _drawY);
-                    }
-                    _bitmap = ToBitmapImage(canvas);
-                }
-                else
-                {
-                    _bitmap = ToBitmapImage(source);
-                }
+                // Always keep native sprite pixels. Alignment is done in the player via DrawX/Y.
+                _bitmap = ToBitmapImage(source);
             }
             catch
             {

@@ -32,6 +32,18 @@ namespace SGReader.Animations
         [ObservableProperty]
         private BitmapImage _currentBitmap;
 
+        [ObservableProperty]
+        private double _layoutWidth;
+
+        [ObservableProperty]
+        private double _layoutHeight;
+
+        [ObservableProperty]
+        private double _drawX;
+
+        [ObservableProperty]
+        private double _drawY;
+
         public AnimationPlayerViewModel()
         {
             _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(33), DispatcherPriority.Render, TimerCallback, App.Current.Dispatcher);
@@ -48,9 +60,7 @@ namespace SGReader.Animations
             if (index == _frameIndex)
                 return;
 
-            _frameIndex = index;
-            CurrentBitmap = _playbackSprites[_frameIndex]?.Bitmap;
-            SaveFrameCommand.NotifyCanExecuteChanged();
+            ShowFrame(index);
         }
 
         public string StatusLabel => Animation == null
@@ -60,10 +70,24 @@ namespace SGReader.Animations
         partial void OnAnimationChanged(SGAnimationViewModel value)
         {
             _playbackSprites = value?.Sprites ?? Array.Empty<SGImageViewModel>();
-            _frameIndex = 0;
             _start = DateTime.Now;
-            CurrentBitmap = _playbackSprites.Count > 0 ? _playbackSprites[0]?.Bitmap : null;
+            ShowFrame(0);
             OnPropertyChanged(nameof(StatusLabel));
+            SaveFrameCommand.NotifyCanExecuteChanged();
+        }
+
+        private void ShowFrame(int index)
+        {
+            _frameIndex = index;
+            var sprite = _playbackSprites.Count > 0
+                ? _playbackSprites[Math.Clamp(index, 0, _playbackSprites.Count - 1)]
+                : null;
+
+            CurrentBitmap = sprite?.Bitmap;
+            LayoutWidth = sprite?.LayoutWidth ?? 0;
+            LayoutHeight = sprite?.LayoutHeight ?? 0;
+            DrawX = sprite?.DrawX ?? 0;
+            DrawY = sprite?.DrawY ?? 0;
             SaveFrameCommand.NotifyCanExecuteChanged();
         }
 

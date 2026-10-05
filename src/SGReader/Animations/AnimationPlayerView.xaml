@@ -28,15 +28,19 @@
                            VerticalAlignment="Center"
                            Foreground="{StaticResource AppSubtleTextBrush}"
                            Visibility="{Binding CurrentBitmap, Converter={StaticResource InverseNullToVisibilityConverter}}" />
-                <Image Source="{Binding CurrentBitmap}"
-                       Stretch="Uniform"
-                       StretchDirection="DownOnly"
-                       Margin="16"
-                       SnapsToDevicePixels="True"
-                       UseLayoutRounding="True"
-                       RenderOptions.BitmapScalingMode="NearestNeighbor"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center" />
+                <Canvas Width="{Binding LayoutWidth}"
+                        Height="{Binding LayoutHeight}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding CurrentBitmap, Converter={StaticResource NullToVisibilityConverter}}">
+                    <Image Source="{Binding CurrentBitmap}"
+                           Canvas.Left="{Binding DrawX}"
+                           Canvas.Top="{Binding DrawY}"
+                           Stretch="None"
+                           SnapsToDevicePixels="True"
+                           UseLayoutRounding="True"
+                           RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                </Canvas>
             </Grid>
         </Border>
 
