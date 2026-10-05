@@ -10,12 +10,26 @@ namespace SGReader.Core
 {
     public class SGImage : IDisposable
     {
+        // C3 / Pharaoh / Zeus tiles
         private const int IsometricTileWidth = 58;
         private const int IsometricTileHeight = 30;
         private const int IsometricTileBytes = 1800;
+
+        // Emperor tiles
         private const int IsometricLargeTileWidth = 78;
         private const int IsometricLargeTileHeight = 40;
         private const int IsometricLargeTileBytes = 3200;
+
+        private const ushort Transparent555 = 0xf81f;
+        private const int OpaqueBlackArgb = unchecked((int)0xff000000);
+        private const int PureRedArgb = unchecked((int)0xffff0000);
+        private const int ShadowArgb = unchecked((int)0x88000000);
+
+        // External .555 records are stored one byte past the documented offset.
+        private const int ExternalOffsetBias = 1;
+
+        // Some C3 graphics truncate the last image by 4 bytes at EOF.
+        private const int MissingTrailingBytesTolerance = 4;
 
         private readonly SGImageData _data;
         private SGImageData _workData;
@@ -24,7 +38,7 @@ namespace SGReader.Core
         public string Description { get; }
         public string FullDescription { get; }
         public bool IsInverted { get; set; }
-        public SGBitmap Parent { get; set; } = null;
+        public SGBitmap Parent { get; set; }
         public int InvertOffset => _data.InvertOffset;
         public int BitmapId => _workData?.BitmapId ?? _data.BitmapId;
         public int Width => _workData.Width;
@@ -44,7 +58,6 @@ namespace SGReader.Core
                 if (!IsInverted)
                     return _workData.XOffset;
 
-                // The mirrored SG record often stores the correct facing hotspot.
                 if (_data.XOffset != 0 || _data.YOffset != 0)
                     return _data.XOffset;
 
@@ -73,77 +86,76 @@ namespace SGReader.Core
             _data = _workData;
             IsInverted = _data.InvertOffset != 0;
             Description = $"{_workData.Width}x{_workData.Height} ({_workData.BitmapId}-{_workData.NumberOfAnimationSprites})";
-            FullDescription = $"ID {Id}: offset {_workData.Offset}, length {_workData.Length}, width {_workData.Width}, height {_workData.Height}, type {_workData.Type}, {(_workData.IsDataExternal ? "external" : "internal")}";
+            FullDescription =
+                $"ID {Id}: offset {_workData.Offset}, length {_workData.Length}, " +
+                $"width {_workData.Width}, height {_workData.Height}, type {_workData.Type}, " +
+                $"{(_workData.IsDataExternal ? "external" : "internal")}";
         }
 
-        public void SetInvertedImage(SGImage image)
-        {
-            _workData = image._data;
-        }
-
+        public void SetInvertedImage(SGImage image) => _workData = image._data;
 
         public void Dispose()
         {
-            // _workData is deleted by whoever owns it
+            // Pixel buffers are created on demand and owned by the caller.
         }
 
         public Bitmap CreateImage()
         {
-            // Trivial checks
             if (Parent == null)
-            {
                 throw new InvalidSGImageException("Image has no bitmap parent", this);
-            }
+
             if (_workData.Width <= 0 || _workData.Height <= 0 || _workData.Length <= 0)
-            {
                 return null;
-            }
 
-            byte[] buffer = FillBuffer();
-            if (buffer == null)
-            {
-                throw new InvalidSGImageException("Unable to load buffer", this);
-            }
+            byte[] buffer = ReadPixelBuffer();
+            var result = new Bitmap(_workData.Width, _workData.Height, PixelFormat.Format32bppArgb);
 
-            Bitmap result = new Bitmap(_workData.Width, _workData.Height, PixelFormat.Format32bppArgb);
             using (var fastBitmap = result.FastLock())
             {
-                switch (_workData.Type)
-                {
-                    case 0:
-                    case 1:
-                    case 10:
-                    case 12:
-                    case 13:
-                    case 20:
-                        // Type alone is not enough: fonts/UI (type 20) and others can be RLE
-                        // when the "fully compressed" flag is set (see SG format wiki).
-                        if (_workData.IsDataFullyCompressed)
-                            LoadSpriteImage(fastBitmap, buffer);
-                        else
-                            LoadPlainImage(fastBitmap, buffer);
-                        break;
-                    case 30:
-                        LoadIsometricImage(fastBitmap, buffer);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException($"Type '{_workData.Type}' is not valid.");
-                }
+                DecodePixels(fastBitmap, buffer);
 
                 if (_workData.AlphaLength > 0)
                 {
-                    byte[] alphaBuffer = buffer.Skip((int) _workData.Length).ToArray();
-                    LoadAlphaMask(fastBitmap, alphaBuffer);
+                    byte[] alphaBuffer = buffer.Skip((int)_workData.Length).ToArray();
+                    ApplyAlphaMask(fastBitmap, alphaBuffer);
                 }
             }
+
             if (IsInverted)
-            {
                 result.RotateFlip(RotateFlipType.RotateNoneFlipX);
-            }
+
             return result;
         }
 
-        private byte[] FillBuffer()
+        private void DecodePixels(FastBitmap result, byte[] buffer)
+        {
+            if (_workData.Type == 30)
+            {
+                DecodeIsometric(result, buffer);
+                return;
+            }
+
+            switch (_workData.Type)
+            {
+                case 0:
+                case 1:
+                case 10:
+                case 12:
+                case 13:
+                case 20:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"Type '{_workData.Type}' is not valid.");
+            }
+
+            // Encoding is independent from the gameplay type: fully-compressed => RLE.
+            if (_workData.IsDataFullyCompressed)
+                DecodeSpriteRle(result, buffer, _workData.Length);
+            else
+                DecodePlain(result, buffer);
+        }
+
+        private byte[] ReadPixelBuffer()
         {
             if (Parent == null)
                 throw new InvalidSGImageException("Unable to open 555 file", this);
@@ -152,92 +164,118 @@ namespace SGReader.Core
             {
                 var file = Parent.OpenFile(_workData.IsDataExternal);
                 if (file == null)
-                {
                     throw new InvalidSGImageException("Unable to open 555 file", this);
-                }
 
                 int dataLength = (int)(_workData.Length + _workData.AlphaLength);
                 if (dataLength <= 0)
-                {
                     throw new InvalidSGImageException($"Invalid data length: {dataLength}", this);
-                }
-                byte[] buffer = new byte[dataLength];
 
-                // Somehow externals have 1 byte added to their offset
-                file.Seek(_workData.Offset - (_workData.IsDataExternal ? 1 : 0), SeekOrigin.Begin);
+                byte[] buffer = new byte[dataLength];
+                long offset = _workData.Offset - (_workData.IsDataExternal ? ExternalOffsetBias : 0);
+                file.Seek(offset, SeekOrigin.Begin);
 
                 int dataRead = file.Read(buffer, 0, dataLength);
-                if (dataLength != dataRead)
+                if (dataLength == dataRead)
+                    return buffer;
+
+                if (dataRead + MissingTrailingBytesTolerance == dataLength && file.Position == file.Length)
                 {
-                    if (dataRead + 4 == dataLength && file.Position == file.Length)
-                    {
-                        // Exception for some C3 graphics: last image is 'missing' 4 bytes
-                        buffer[dataRead] = buffer[dataRead + 1] = 0;
-                        buffer[dataRead + 2] = buffer[dataRead + 3] = 0;
-                    }
-                    else
-                        throw new InvalidSGImageException($"Unable to read {dataLength} bytes from file (read {dataRead} bytes)", this);
+                    buffer[dataRead] = buffer[dataRead + 1] = 0;
+                    buffer[dataRead + 2] = buffer[dataRead + 3] = 0;
+                    return buffer;
                 }
-                return buffer;
+
+                throw new InvalidSGImageException(
+                    $"Unable to read {dataLength} bytes from file (read {dataRead} bytes)", this);
             }
         }
 
-        private void LoadPlainImage(FastBitmap result, byte[] buffer)
+        private void DecodePlain(FastBitmap result, byte[] buffer)
         {
-            // Check whether the image data is OK
             if (_workData.Height * _workData.Width * 2 != (int)_workData.Length)
                 throw new InvalidSGImageException("Image data length doesn't match image size", this);
 
             int i = 0;
-            for (int y = 0; y < (int)_workData.Height; y++)
+            for (int y = 0; y < _workData.Height; y++)
             {
-                for (int x = 0; x < (int)_workData.Width; x++, i += 2)
+                for (int x = 0; x < _workData.Width; x++, i += 2)
+                    Set555Pixel(result, x, y, (ushort)(buffer[i] | (buffer[i + 1] << 8)));
+            }
+        }
+
+        private void DecodeIsometric(FastBitmap result, byte[] buffer)
+        {
+            WriteIsometricBase(result, buffer);
+            int topOffset = (int)_workData.UncompressedLength;
+            uint topLength = _workData.Length - _workData.UncompressedLength;
+            DecodeSpriteRle(result, buffer.Skip(topOffset).ToArray(), topLength);
+        }
+
+        private void DecodeSpriteRle(FastBitmap result, byte[] buffer, uint length)
+        {
+            int i = 0;
+            int x = 0;
+            int y = 0;
+            int width = result.Width;
+
+            while (i < length)
+            {
+                byte c = buffer[i++];
+                if (c == 255)
                 {
-                    Set555Pixel(result, x, y, (ushort) (buffer[i] | (buffer[i + 1] << 8)));
+                    x += buffer[i++];
+                    while (x >= width)
+                    {
+                        y++;
+                        x -= width;
+                    }
+                }
+                else
+                {
+                    for (int j = 0; j < c; j++, i += 2)
+                    {
+                        Set555Pixel(result, x, y, (ushort)(buffer[i] | (buffer[i + 1] << 8)));
+                        x++;
+                        if (x >= width)
+                        {
+                            y++;
+                            x = 0;
+                        }
+                    }
                 }
             }
         }
 
-        private void LoadIsometricImage(FastBitmap result, byte[] buffer)
-        {
-            WriteIsometricBase(result, buffer);
-            WriteTransparentImage(result, buffer.Skip((int) _workData.UncompressedLength).ToArray(), _workData.Length - _workData.UncompressedLength);
-        }
-
-        private void LoadSpriteImage(FastBitmap result, byte[] buffer)
-        {
-            WriteTransparentImage(result, buffer, _workData.Length);
-        }
-        
-        private void LoadAlphaMask(FastBitmap result, byte[] alphaBuffer)
+        private void ApplyAlphaMask(FastBitmap result, byte[] alphaBuffer)
         {
             int i = 0;
-            int x = 0, y = 0, j;
+            int x = 0;
+            int y = 0;
             int width = result.Width;
-            int length = (int) _workData.AlphaLength;
+            int length = (int)_workData.AlphaLength;
 
             while (i < length)
             {
                 byte c = alphaBuffer[i++];
                 if (c == 255)
                 {
-                    /* The next byte is the number of pixels to skip */
                     x += alphaBuffer[i++];
                     while (x >= width)
                     {
-                        y++; x -= width;
+                        y++;
+                        x -= width;
                     }
                 }
                 else
                 {
-                    /* `c' is the number of image data bytes */
-                    for (j = 0; j < c; j++, i++)
+                    for (int j = 0; j < c; j++, i++)
                     {
                         SetAlphaPixel(result, x, y, alphaBuffer[i]);
                         x++;
                         if (x >= width)
                         {
-                            y++; x = 0;
+                            y++;
+                            x = 0;
                         }
                     }
                 }
@@ -247,33 +285,25 @@ namespace SGReader.Core
         private void WriteIsometricBase(FastBitmap result, byte[] buffer)
         {
             int size = _workData.Flags[3];
-            int tileBytes, tileHeight, tileWidth;
-
             int width = result.Width;
-            var height = (width + 2) / 2;
-            var heightOffset = result.Height - height;
-            var yOffset = heightOffset;
+            int height = (width + 2) / 2;
+            int yOffset = result.Height - height;
 
             if (size == 0)
             {
-                /* Derive the tile size from the height (more regular than width) */
-                /* Note that this causes a problem with 4x4 regular vs 3x3 large: */
-                /* 4 * 30 = 120; 3 * 40 = 120 -- give precedence to regular */
+                // Prefer regular tiles when both would divide the height evenly.
                 if (height % IsometricTileHeight == 0)
-                {
                     size = height / IsometricTileHeight;
-                }
                 else if (height % IsometricLargeTileHeight == 0)
-                {
                     size = height / IsometricLargeTileHeight;
-                }
-            }
-            if (size == 0)
-            {
-                throw new InvalidSGImageException($"Unknown isometric tile size: height {height}", this);
             }
 
-            /* Determine whether we should use the regular or large (emperor) tiles */
+            if (size == 0)
+                throw new InvalidSGImageException($"Unknown isometric tile size: height {height}", this);
+
+            int tileBytes;
+            int tileHeight;
+            int tileWidth;
             if (IsometricTileHeight * size == height)
             {
                 tileBytes = IsometricTileBytes;
@@ -289,31 +319,40 @@ namespace SGReader.Core
             else
             {
                 throw new InvalidSGImageException(
-                    $"Unknown tile size: {2 * height / size} (height {height}, width {width}, size {size})", this);
-            }
-
-            /* Check if buffer length is enough: (width + 2) * height / 2 * 2bpp */
-            if ((width + 2) * height != (int)_workData.UncompressedLength)
-            {
-                throw new InvalidSGImageException(
-                    $"Data length doesn't match footprint size: {(width + 2) * height} vs {_workData.UncompressedLength} ({_workData.Length}) {_workData.InvertOffset}",
+                    $"Unknown tile size: {2 * height / size} (height {height}, width {width}, size {size})",
                     this);
             }
 
-            int i = 0;
-            for (int y = 0; y < (size + (size - 1)); y++)
+            if ((width + 2) * height != (int)_workData.UncompressedLength)
             {
-                var xOffset = (y < size ? (size - y - 1) : (y - size + 1)) * tileHeight;
-                for (int x = 0; x < (y < size ? y + 1 : 2 * size - y - 1); x++, i++)
+                throw new InvalidSGImageException(
+                    $"Data length doesn't match footprint size: {(width + 2) * height} vs {_workData.UncompressedLength}",
+                    this);
+            }
+
+            int tileIndex = 0;
+            for (int y = 0; y < size + (size - 1); y++)
+            {
+                int xOffset = (y < size ? size - y - 1 : y - size + 1) * tileHeight;
+                int tilesInRow = y < size ? y + 1 : 2 * size - y - 1;
+                for (int x = 0; x < tilesInRow; x++, tileIndex++)
                 {
-                    WriteIsometricTile(result, buffer, i * tileBytes, xOffset, yOffset, tileWidth, tileHeight);
+                    WriteIsometricTile(result, buffer, tileIndex * tileBytes, xOffset, yOffset, tileWidth, tileHeight);
                     xOffset += tileWidth + 2;
                 }
+
                 yOffset += tileHeight / 2;
             }
         }
 
-        private void WriteIsometricTile(FastBitmap result, byte[] buffer, int bufferOffset, int xOffset, int yOffset, int tileWidth, int tileHeight)
+        private void WriteIsometricTile(
+            FastBitmap result,
+            byte[] buffer,
+            int bufferOffset,
+            int xOffset,
+            int yOffset,
+            int tileWidth,
+            int tileHeight)
         {
             int halfHeight = tileHeight / 2;
             int i = bufferOffset;
@@ -328,6 +367,7 @@ namespace SGReader.Core
                         (ushort)((buffer[i + 1] << 8) | buffer[i]));
                 }
             }
+
             for (int y = halfHeight; y < tileHeight; y++)
             {
                 int start = 2 * y - tileHeight;
@@ -340,131 +380,28 @@ namespace SGReader.Core
             }
         }
 
-        private void WriteTransparentImage(FastBitmap result, byte[] buffer, uint length)
+        private static void Set555Pixel(FastBitmap result, int x, int y, ushort color)
         {
-            int i = 0;
-            int x = 0, y = 0, j;
-            int width = result.Width;
-
-            while (i < length)
-            {
-                byte c = buffer[i++];
-                if (c == 255)
-                {
-                    /* The next byte is the number of pixels to skip */
-                    x += buffer[i++];
-                    while (x >= width)
-                    {
-                        y++; x -= width;
-                    }
-                }
-                else
-                {
-                    /* `c' is the number of image data bytes */
-                    for (j = 0; j < c; j++, i += 2)
-                    {
-                        Set555Pixel(result, x, y,  (ushort) (buffer[i] | (buffer[i + 1] << 8)));
-                        x++;
-                        if (x >= width)
-                        {
-                            y++; x = 0;
-                        }
-                    }
-                }
-            }
-        }
-
-        private void Set555Pixel(FastBitmap result, int x, int y, ushort color)
-        {
-            if (color == 0xf81f)
-            {
+            if (color == Transparent555)
                 return;
-            }
 
-            int rgb = unchecked((int) 0xff000000);
+            int rgb = OpaqueBlackArgb;
+            rgb |= ((color & 0x7c00) << 9) | ((color & 0x7000) << 4); // red
+            rgb |= ((color & 0x3e0) << 6) | (color & 0x300);          // green
+            rgb |= ((color & 0x1f) << 3) | ((color & 0x1c) >> 2);      // blue
 
-            // Red: bits 11-15, should go to bits 17-24
-            rgb |= ((color & 0x7c00) << 9) | ((color & 0x7000) << 4);
-
-            // Green: bits 6-10, should go to bits 9-16
-            rgb |= ((color & 0x3e0) << 6) | ((color & 0x300));
-
-            // Blue: bits 1-5, should go to bits 1-8
-            rgb |= ((color & 0x1f) << 3) | ((color & 0x1c) >> 2);
-
-            // Transform red to transparent black (for shadows).
-            if (rgb == unchecked((int)0xffff0000))
-            {
-                rgb = unchecked((int)0x88000000);
-            }
+            // Pure red becomes translucent black (game shadows).
+            if (rgb == PureRedArgb)
+                rgb = ShadowArgb;
 
             result.SetPixel(x, y, Color.FromArgb(rgb));
         }
 
-        private void SetAlphaPixel(FastBitmap result, int x, int y, byte color)
+        private static void SetAlphaPixel(FastBitmap result, int x, int y, byte color)
         {
-            /* Only the first five bits of the alpha channel are used */
-            byte alpha = (byte) (((color & 0x1f) << 3) | ((color & 0x1c) >> 2));
-
-            result.SetPixel(x, y, Color.FromArgb((alpha << 24) | (result.GetPixel(x, y).ToArgb() & 0xffffff)));
+            byte alpha = (byte)(((color & 0x1f) << 3) | ((color & 0x1c) >> 2));
+            int rgb = result.GetPixel(x, y).ToArgb() & 0xffffff;
+            result.SetPixel(x, y, Color.FromArgb((alpha << 24) | rgb));
         }
-
-
-
     }
-
-    //public class FastBitmap : IDisposable
-    //{
-    //    private readonly Bitmap _bitmap;
-    //    private BitmapData _data;
-
-    //    public int Width { get; }
-
-    //    public int Height { get; }
-
-    //    public FastBitmap(Bitmap bitmap)
-    //    {
-    //        _bitmap = bitmap;
-    //        Width = bitmap.Width;
-    //        Height = bitmap.Height;
-
-    //        _data = _bitmap.LockBits(new Rectangle(0, 0, _bitmap.Width, _bitmap.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-    //    }
-
-    //    public void SetPixel(int x, int y, Color color)
-    //    {
-    //        int stride = _data.Stride;
-    //        unsafe
-    //        {
-    //            byte* ptr = (byte*)_data.Scan0;
-    //            ptr[(x * 3) + y * stride] = color.B;
-    //            ptr[(x * 3) + y * stride + 1] = color.G;
-    //            ptr[(x * 3) + y * stride + 2] = color.R;
-    //        }
-    //    }
-
-    //    public Color GetPixel(int x, int y)
-    //    {
-    //        int stride = _data.Stride;
-    //        byte r, g, b, a = 0;
-    //        unsafe
-    //        {
-    //            byte* ptr = (byte*)_data.Scan0;
-    //           b = ptr[(x * 3) + y * stride];
-    //           g = ptr[(x * 3) + y * stride + 1];
-    //           r= ptr[(x * 3) + y * stride + 2];
-    //        }
-    //        return Color.FromArgb(a,r,g,b);
-    //    }
-
-    //    public void RotateFlip(RotateFlipType flipType)
-    //    {
-    //      //  _bitmap.RotateFlip(flipType);
-    //    }
-
-    //    public void Dispose()
-    //    {
-    //        _bitmap.UnlockBits(_data);
-    //    }
-    //}
 }

@@ -1,29 +1,19 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace SGReader.Core.Helpers
 {
     public static class BinaryReaderExtensions
     {
-        public static int[] ReadInts32(this BinaryReader self, int count)
-        {
-            var array = new int[count];
-            for (int i = 0; i < count; i++)
-            {
-                array[i] = self.ReadInt32();
-            }
-            return array;
-        }
+        public static void Skip(this BinaryReader self, int bytes)
+            => self.BaseStream.Seek(bytes, SeekOrigin.Current);
 
-        public static short[] ReadInts16(this BinaryReader self, int count)
+        /// <summary>Reads a fixed-width Latin-1 field and trims at the first null.</summary>
+        public static string ReadFixedString(this BinaryReader self, int length)
         {
-            var array = new short[count];
-            for (int i = 0; i < count; i++)
-            {
-                array[i] = self.ReadInt16();
-            }
-            return array;
+            var chars = self.ReadChars(length);
+            int end = Array.IndexOf(chars, '\0');
+            return new string(chars, 0, end < 0 ? chars.Length : end);
         }
-
-        public static void Skip(this BinaryReader self, int bytes) => self.BaseStream.Seek(bytes, SeekOrigin.Current);
     }
 }

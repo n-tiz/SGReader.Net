@@ -5,8 +5,8 @@ namespace SGReader.Core
 {
     public class SGIndex
     {
-        public const int IndexSize = 600;
-        public const int EntriesCount = 300;
+        public const int IndexSize = SGFormat.IndexSize;
+        public const int EntriesCount = SGFormat.IndexEntryCount;
 
         private readonly ushort[] _entries = new ushort[EntriesCount];
 
@@ -17,9 +17,7 @@ namespace SGReader.Core
         public SGIndex(BinaryReader reader)
         {
             for (int i = 0; i < EntriesCount; i++)
-            {
                 _entries[i] = reader.ReadUInt16();
-            }
         }
     }
 }

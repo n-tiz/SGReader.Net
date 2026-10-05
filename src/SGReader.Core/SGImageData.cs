@@ -21,12 +21,13 @@ namespace SGReader.Core
             XOffset = reader.ReadInt16();
             YOffset = reader.ReadInt16();
             reader.Skip(10);
-            IsAnimationReversible = Convert.ToBoolean(reader.ReadByte());
+            IsAnimationReversible = reader.ReadByte() != 0;
             reader.Skip(1);
 
-            // Pecunia: quint16 type, then 4 flag bytes (flags[0]=external, flags[3]=iso tile size)
+            // Record layout: type byte, fully-compressed byte, then 4 flag bytes
+            // (flags[0]=external, flags[1]=partly-compressed, flags[3]=iso tile size).
             Type = reader.ReadByte();
-            IsDataFullyCompressed = Convert.ToBoolean(reader.ReadByte());
+            IsDataFullyCompressed = reader.ReadByte() != 0;
             Flags = reader.ReadBytes(4);
             IsDataExternal = Flags[0] != 0;
             IsImagePartlyCompressed = Flags[1] != 0;

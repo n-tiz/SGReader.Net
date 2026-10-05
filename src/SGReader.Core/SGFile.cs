@@ -14,15 +14,10 @@ namespace SGReader.Core
         private readonly List<SGAnimationsGroup> _animationsGroups = new List<SGAnimationsGroup>();
 
         public string Name { get; }
-
         public IReadOnlyList<SGImage> Images => _images;
-
         public IReadOnlyList<SGBitmap> Bitmaps => _bitmaps;
-
         public IReadOnlyList<SGAnimationsGroup> AnimationsGroups => _animationsGroups;
-
         public SGHeader Header { get; private set; }
-
         public SGIndex Index { get; private set; }
 
         public SGFile(string filePath)
@@ -35,125 +30,95 @@ namespace SGReader.Core
         {
             if (!File.Exists(_filePath))
                 throw new FileNotFoundException(_filePath);
-            using (FileStream fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (BinaryReader reader = new BinaryReader(fileStream, Encoding.Latin1))
-            {
-                Header = new SGHeader(reader);
-                CheckVersion();
-                fileStream.Seek(SGHeader.HeaderSize, SeekOrigin.Begin);
-                Index = new SGIndex(reader);
-                fileStream.Seek(SGHeader.HeaderSize + SGIndex.IndexSize, SeekOrigin.Begin);
-                LoadBitmaps(reader);
-                fileStream.Seek(SGHeader.HeaderSize + SGIndex.IndexSize + GetMaxBitmapDataCount(Header.Version) * SGBitmap.DataSize, SeekOrigin.Begin);
-                LoadImages(reader, Header.Version >= SGFileVersion.SG3FormatWithAlphaMask);
-                LoadAnimations();
-            }
-        }
 
-        private void LoadAnimations()
-        {
+            using var fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new BinaryReader(fileStream, Encoding.Latin1);
+
+            Header = new SGHeader(reader);
+            EnsureValidVersion();
+
+            fileStream.Seek(SGFormat.HeaderSize, SeekOrigin.Begin);
+            Index = new SGIndex(reader);
+
+            fileStream.Seek(SGFormat.HeaderSize + SGFormat.IndexSize, SeekOrigin.Begin);
+            LoadBitmaps(reader);
+
+            int bitmapSectionSize = SGFormat.MaxBitmapSlots(Header.Version) * SGFormat.BitmapRecordSize;
+            fileStream.Seek(SGFormat.HeaderSize + SGFormat.IndexSize + bitmapSectionSize, SeekOrigin.Begin);
+            LoadImages(reader, Header.Version >= SGFileVersion.SG3FormatWithAlphaMask);
+
             _animationsGroups.AddRange(SGAnimationFactory.BuildAnimationsGroup(this, Index.Entries));
         }
 
-
         private void LoadImages(BinaryReader reader, bool includeAlpha)
         {
-            // The first image is a dummy/null record
-            SGImage dummy = new SGImage(-1, reader, includeAlpha);
+            // Record 0 is a dummy / null image and is discarded.
+            _ = new SGImage(-1, reader, includeAlpha);
 
             for (int i = 0; i < Header.ImageDataCount; i++)
             {
-                var image = CreateImage(reader, includeAlpha, i);
+                var image = new SGImage(i + 1, reader, includeAlpha);
+
+                int invertOffset = image.InvertOffset;
+                if (invertOffset < 0 && i + invertOffset >= 0)
+                    image.SetInvertedImage(_images[i + invertOffset]);
+
+                int bitmapId = image.BitmapId;
+                if (bitmapId >= 0 && bitmapId < _bitmaps.Count)
+                    _bitmaps[bitmapId].AddImage(image);
+
                 _images.Add(image);
             }
-        }
-
-        private SGImage CreateImage(BinaryReader reader, bool includeAlpha, int i)
-        {
-            SGImage image = new SGImage(i + 1, reader, includeAlpha);
-            int invertOffset = image.InvertOffset;
-            if (invertOffset < 0 && (i + invertOffset) >= 0)
-            {
-                image.SetInvertedImage(_images[i + invertOffset]);
-            }
-
-            int bitmapId = image.BitmapId;
-            if (bitmapId >= 0 && bitmapId < _bitmaps.Count)
-            {
-                _bitmaps[bitmapId].AddImage(image);
-            }
-            return image;
         }
 
         private void LoadBitmaps(BinaryReader reader)
         {
             for (int i = 0; i < Header.BitmapDataCount; i++)
-            {
-                SGBitmap bitmap = new SGBitmap(i, _filePath, reader);
-                _bitmaps.Add(bitmap);
-            }
+                _bitmaps.Add(new SGBitmap(i, _filePath, reader));
         }
 
-        private void CheckVersion()
+        private void EnsureValidVersion()
         {
-            if (Header.Version == SGFileVersion.SG2FormatDemo || Header.Version == SGFileVersion.SG2Format)
-            {
-                // SG2 file: filesize = 74480 or 522680 (depending on whether it's
-                // a "normal" sg2 or an enemy sg2
-                if (Header.SGFileSize == 74480 || Header.SGFileSize == 522680)
-                {
-                    return;
-                }
-            }
-            else if (Header.Version == SGFileVersion.SG3Format || Header.Version == SGFileVersion.SG3FormatWithAlphaMask)
-            {
-                // SG3 file: filesize = the actual size of the sg3 file
-                FileInfo fi = new FileInfo(_filePath);
-                if (Header.SGFileSize == 74480 || fi.Length == Header.SGFileSize)
-                {
-                    return;
-                }
-            }
-            // All other cases:
-            throw new InvalidSGFileException($"File version ({Header.Version}) or file size is not valid.", this);
-        }
-
-        private static int GetMaxBitmapDataCount(SGFileVersion version)
-        {
-            switch (version)
+            switch (Header.Version)
             {
                 case SGFileVersion.SG2FormatDemo:
-                    return 50;
                 case SGFileVersion.SG2Format:
-                    return 100;
+                    if (Header.SGFileSize == SGFormat.Sg2NormalFileSize
+                        || Header.SGFileSize == SGFormat.Sg2EnemyFileSize)
+                        return;
+                    break;
+
                 case SGFileVersion.SG3Format:
                 case SGFileVersion.SG3FormatWithAlphaMask:
-                    return 200;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                    // Some SG3 files reuse the SG2 sentinel; otherwise size must match the file.
+                    if (Header.SGFileSize == SGFormat.Sg2NormalFileSize
+                        || new FileInfo(_filePath).Length == Header.SGFileSize)
+                        return;
+                    break;
             }
+
+            throw new InvalidSGFileException(
+                $"File version ({Header.Version}) or file size is not valid.", this);
         }
 
         public SGImage GetImageById(int imageId)
         {
-            // Image IDs are 1-based; the dummy record at position 0 is discarded on load.
+            // Image IDs are 1-based; dummy record at position 0 was discarded on load.
             if (imageId < 1 || imageId > _images.Count)
                 return null;
 
             return _images[imageId - 1];
         }
-        
+
         public void Dispose()
         {
             foreach (var bitmap in _bitmaps)
-            {
                 bitmap.Dispose();
-            }
             _bitmaps.Clear();
+
             foreach (var image in _images)
-            {
                 image.Dispose();
-            }
+            _images.Clear();
         }
     }
 }
