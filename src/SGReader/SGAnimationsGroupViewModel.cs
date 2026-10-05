@@ -30,10 +30,11 @@ namespace SGReader
             Description = description;
         }
 
-        public static SGAnimationsGroupViewModel FromBitmap(SGBitmap bitmap)
+        public static SGAnimationsGroupViewModel FromBitmap(SGBitmap bitmap, ISet<int> excludeImageIds = null)
         {
             var animations = bitmap.Images
                 .Where(image => image.Width > 0 && image.Height > 0)
+                .Where(image => excludeImageIds == null || !excludeImageIds.Contains(image.Id))
                 .Select(image =>
                 {
                     var animation = new SGAnimation(new List<SGImage> { image })
@@ -43,6 +44,9 @@ namespace SGReader
                     return new SGAnimationViewModel(animation);
                 })
                 .ToList();
+
+            if (animations.Count == 0)
+                return null;
 
             return new SGAnimationsGroupViewModel(
                 animations,

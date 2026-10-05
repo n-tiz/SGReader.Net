@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Media.Imaging;
@@ -30,21 +31,32 @@ namespace SGReader
                     AnimationsGroups.Add(group);
             }
 
-            // Stat / static SG files have images but no usable animation metadata.
-            if (AnimationsGroups.Count == 0)
+            // Keep leftover stills that aren't part of an index animation (including underlays).
+            var usedImageIds = new HashSet<int>();
+            foreach (var group in sgFile.AnimationsGroups)
             {
-                foreach (var bitmap in sgFile.Bitmaps.Where(b => b.Images.Any(i => i.Width > 0 && i.Height > 0)))
+                foreach (var animation in group.Animations)
                 {
-                    var group = SGAnimationsGroupViewModel.FromBitmap(bitmap);
-                    if (group.Animations.Count > 0)
-                        AnimationsGroups.Add(group);
+                    if (animation.BaseImage != null)
+                        usedImageIds.Add(animation.BaseImage.Id);
+
+                    foreach (var image in animation.Images)
+                        usedImageIds.Add(image.Id);
                 }
             }
 
+            foreach (var bitmap in sgFile.Bitmaps)
+            {
+                var group = SGAnimationsGroupViewModel.FromBitmap(bitmap, usedImageIds);
+                if (group != null)
+                    AnimationsGroups.Add(group);
+            }
+
             AnimationGroupCount = AnimationsGroups.Count;
-            Description = AnimationsGroups.Count > 0 && sgFile.AnimationsGroups.Count == 0
-                ? $"{AnimationGroupCount} bitmaps · {ImageCount} images"
-                : $"{AnimationGroupCount} groups · {ImageCount} images";
+            int indexedGroups = sgFile.AnimationsGroups.Count(group => group.Animations.Count > 0);
+            Description = indexedGroups > 0
+                ? $"{indexedGroups} anims · {AnimationGroupCount} groups · {ImageCount} images"
+                : $"{AnimationGroupCount} bitmaps · {ImageCount} images";
 
             Thumbnail = PickThumbnail();
             SelectedAnimation = AnimationsGroups.SelectMany(g => g.Animations).FirstOrDefault();

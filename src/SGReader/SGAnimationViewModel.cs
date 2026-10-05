@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using SGReader.Core;
@@ -20,9 +22,24 @@ namespace SGReader
 
         public string Title { get; }
         public string Description => $"{Count} frames";
-        public string FullDescription => string.Join(" → ", _animation.Images.Select(s => s.Id));
-        public string BitmapName => _animation.Images.FirstOrDefault()?.Parent?.FileName ?? "—";
+        public string FullDescription
+        {
+            get
+            {
+                var ids = _animation.Images.Select(s => s.Id.ToString());
+                if (_animation.BaseImage != null)
+                    return $"{_animation.BaseImage.Id} + {string.Join(" → ", ids)}";
+                return string.Join(" → ", ids);
+            }
+        }
+
+        public string BitmapName =>
+            _animation.BaseImage?.Parent?.FileName
+            ?? _animation.Images.FirstOrDefault()?.Parent?.FileName
+            ?? "—";
+
         public string SizeLabel => Preview == null ? "—" : Preview.Description;
+
         public string TypeLabel { get; }
 
         public bool IsReversible { get; }
@@ -34,11 +51,18 @@ namespace SGReader
         {
             _animation = animation;
             var first = _animation.Images.FirstOrDefault();
+            var baseImage = _animation.BaseImage;
             Title = string.IsNullOrWhiteSpace(_animation.Name)
-                ? (first?.Parent?.FileName ?? $"Animation {first?.Id}")
+                ? (baseImage?.Parent?.FileName ?? first?.Parent?.FileName ?? $"Animation {first?.Id}")
                 : _animation.Name;
-            TypeLabel = SGImageTypeHelper.FormatTypes(_animation.Images.Select(i => i.Type));
-            IsReversible = first?.IsAnimationReversible == true;
+
+            var types = _animation.Images.Select(i => i.Type).AsEnumerable();
+            if (baseImage != null)
+                types = new[] { baseImage.Type }.Concat(types);
+            TypeLabel = SGImageTypeHelper.FormatTypes(types);
+
+            IsReversible = baseImage?.IsAnimationReversible == true
+                || first?.IsAnimationReversible == true;
         }
 
         private IReadOnlyList<SGImageViewModel> BuildSprites()
@@ -47,8 +71,55 @@ namespace SGReader
             if (images.Count == 0)
                 return Array.Empty<SGImageViewModel>();
 
-            // Julius figure draw: pixel -= sprite_offset, so the hotspot inside the
-            // bitmap is at (XOffset, YOffset). Keep that point fixed across frames.
+            if (_animation.BaseImage != null)
+                return BuildCompositedSprites(_animation.BaseImage, images);
+
+            return BuildAlignedSprites(images);
+        }
+
+        private static IReadOnlyList<SGImageViewModel> BuildCompositedSprites(
+            SGImage baseImage,
+            IReadOnlyList<SGImage> frames)
+        {
+            using var baseBitmap = baseImage.CreateImage();
+            if (baseBitmap == null)
+                return BuildAlignedSprites(frames);
+
+            int offsetX = baseImage.XOffset;
+            int offsetY = baseImage.YOffset;
+            var result = new List<SGImageViewModel>(frames.Count);
+
+            foreach (var frame in frames)
+            {
+                try
+                {
+                    using var overlay = frame.CreateImage();
+                    if (overlay == null)
+                        continue;
+
+                    int canvasWidth = Math.Max(baseBitmap.Width, offsetX + overlay.Width);
+                    int canvasHeight = Math.Max(baseBitmap.Height, offsetY + overlay.Height);
+                    using var canvas = new Bitmap(canvasWidth, canvasHeight, PixelFormat.Format32bppArgb);
+                    using (var graphics = Graphics.FromImage(canvas))
+                    {
+                        graphics.Clear(Color.Transparent);
+                        graphics.DrawImageUnscaled(baseBitmap, 0, 0);
+                        graphics.DrawImageUnscaled(overlay, offsetX, offsetY);
+                    }
+
+                    result.Add(SGImageViewModel.FromRendered(frame, canvas));
+                }
+                catch
+                {
+                    // Skip frames that fail to decode.
+                }
+            }
+
+            return result;
+        }
+
+        private static IReadOnlyList<SGImageViewModel> BuildAlignedSprites(IReadOnlyList<SGImage> images)
+        {
             bool hasOffsets = images.Any(i => i.XOffset != 0 || i.YOffset != 0);
             if (!hasOffsets)
             {
@@ -66,10 +137,8 @@ namespace SGReader
 
             int hotspotX = images.Max(i => i.XOffset);
             int hotspotY = images.Max(i => i.YOffset);
-            int canvasWidth = images.Max(i => hotspotX - i.XOffset + i.Width);
-            int canvasHeight = images.Max(i => hotspotY - i.YOffset + i.Height);
-            canvasWidth = Math.Max(1, canvasWidth);
-            canvasHeight = Math.Max(1, canvasHeight);
+            int canvasWidth = Math.Max(1, images.Max(i => hotspotX - i.XOffset + i.Width));
+            int canvasHeight = Math.Max(1, images.Max(i => hotspotY - i.YOffset + i.Height));
 
             return images
                 .Select(image => new SGImageViewModel(
