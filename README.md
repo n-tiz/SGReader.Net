@@ -29,7 +29,7 @@ dotnet build src/SGReader.sln -c Release
 2. Choisir le profil **FolderProfile** (ou Dossier / Folder)
 3. **Publier**
 
-Sortie : `publish/SGReader-1.0.0.exe`
+Sortie : `publish/SGReader.Net-1.0.0.exe`
 
 **CLI**
 
@@ -39,7 +39,7 @@ dotnet publish src/SGReader/SGReader.csproj -c Release -o publish -p:PublishSing
 
 Framework-dependent win-x64 (~7 MB). Requires [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0).
 
-Bump `<Version>` in `src/SGReader/SGReader.csproj` to change the exe name (`SGReader-<version>.exe`).
+Bump `<Version>` in `src/SGReader/SGReader.csproj` to change the exe name (`SGReader.Net-<version>.exe`).
 
 ## UI
 

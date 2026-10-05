@@ -103,6 +103,7 @@
                                                                Text="{Binding Title}"
                                                                FontWeight="SemiBold"
                                                                FontSize="12"
+                                                               Foreground="{StaticResource AppTitleTextBrush}"
                                                                TextTrimming="CharacterEllipsis"
                                                                HorizontalAlignment="Center" />
                                                     <TextBlock Text="{Binding Description}"

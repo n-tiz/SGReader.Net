@@ -7,7 +7,7 @@
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  mc:Ignorable="d"
                  x:Name="Root"
-                 Title="SGReader"
+                 Title="SGReader.Net"
                  Width="1280"
                  Height="800"
                  MinWidth="960"
@@ -23,7 +23,7 @@
         </Grid.RowDefinitions>
 
         <ui:TitleBar Grid.Row="0"
-                     Title="SGReader"
+                     Title="SGReader.Net"
                      Height="32"
                      Background="{StaticResource AppSidebarBrush}">
             <ui:TitleBar.Icon>

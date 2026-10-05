@@ -21,6 +21,7 @@
             <SolidColorBrush x:Key="AppCardBrush" Color="#FF2B2B2B" />
             <SolidColorBrush x:Key="AppCardHoverBrush" Color="#FF343434" />
             <SolidColorBrush x:Key="AppCardSelectedBrush" Color="#FF3A3A3A" />
+            <SolidColorBrush x:Key="AppTitleTextBrush" Color="#FFFFFF" />
             <SolidColorBrush x:Key="AppSubtleTextBrush" Color="#FFADADAD" />
             <SolidColorBrush x:Key="AppDividerBrush" Color="#28FFFFFF" />
             <SolidColorBrush x:Key="CheckerLightBrush" Color="#FF3C3C3C" />
