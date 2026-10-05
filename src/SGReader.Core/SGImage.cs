@@ -111,14 +111,17 @@ namespace SGReader.Core
                 switch (_workData.Type)
                 {
                     case 0:
-                        LoadSpriteImage(fastBitmap, buffer);
-                        break;
                     case 1:
                     case 10:
                     case 12:
                     case 13:
                     case 20:
-                        LoadPlainImage(fastBitmap, buffer);
+                        // Type alone is not enough: fonts/UI (type 20) and others can be RLE
+                        // when the "fully compressed" flag is set (see SG format wiki).
+                        if (_workData.IsDataFullyCompressed)
+                            LoadSpriteImage(fastBitmap, buffer);
+                        else
+                            LoadPlainImage(fastBitmap, buffer);
                         break;
                     case 30:
                         LoadIsometricImage(fastBitmap, buffer);
