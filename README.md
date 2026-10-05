@@ -25,11 +25,11 @@ dotnet build src/SGReader.sln -c Release
 
 **Visual Studio**
 
-1. Clic droit sur le projet `SGReader` → **Publier…**
-2. Choisir le profil **FolderProfile** (ou Dossier / Folder)
-3. **Publier**
+1. Right-click the `SGReader` project → **Publish…**
+2. Select the **FolderProfile** (Folder) profile
+3. **Publish**
 
-Sortie : `publish/SGReader.Net-1.0.0.exe`
+Output: `publish/SGReader.Net-1.0.0.exe`
 
 **CLI**
 
