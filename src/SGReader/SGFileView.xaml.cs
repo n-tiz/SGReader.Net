@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 
 namespace SGReader
 {
@@ -7,6 +8,13 @@ namespace SGReader
         public SGFileView()
         {
             InitializeComponent();
+            DataContextChanged += OnDataContextChanged;
+        }
+
+        private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            GalleryScrollViewer?.ScrollToHome();
+            InspectorScrollViewer?.ScrollToHome();
         }
     }
 }

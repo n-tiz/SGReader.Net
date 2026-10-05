@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using SGReader.Animations;
 using SGReader.Core;
 using SGReader.Helpers;
@@ -47,6 +48,7 @@ namespace SGReader
 
             Thumbnail = PickThumbnail();
             SelectedAnimation = AnimationsGroups.SelectMany(g => g.Animations).FirstOrDefault();
+            SyncAnimationSelection(SelectedAnimation);
         }
 
         public AnimationPlayerViewModel AnimationPlayer => _animationPlayer ??= CreateAnimationPlayer();
@@ -62,8 +64,30 @@ namespace SGReader
 
         partial void OnSelectedAnimationChanged(SGAnimationViewModel value)
         {
+            SyncAnimationSelection(value);
             if (_animationPlayer != null)
                 _animationPlayer.Animation = value;
+        }
+
+        [RelayCommand]
+        private void SelectAnimation(SGAnimationViewModel animation)
+        {
+            if (animation == null)
+                return;
+
+            SelectedAnimation = animation;
+
+            // Always rebuild playback: ObservableProperty skips no-op assigns, and a
+            // previously stuck selection can leave the player on the wrong frames.
+            var player = AnimationPlayer;
+            player.Animation = null;
+            player.Animation = animation;
+        }
+
+        private void SyncAnimationSelection(SGAnimationViewModel selected)
+        {
+            foreach (var animation in AnimationsGroups.SelectMany(group => group.Animations))
+                animation.IsSelected = ReferenceEquals(animation, selected);
         }
 
         [ObservableProperty]

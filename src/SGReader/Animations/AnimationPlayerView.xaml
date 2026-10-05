@@ -30,8 +30,8 @@
                            Visibility="{Binding CurrentBitmap, Converter={StaticResource InverseNullToVisibilityConverter}}" />
                 <Image Source="{Binding CurrentBitmap}"
                        Stretch="Uniform"
+                       StretchDirection="DownOnly"
                        Margin="16"
-                       MaxHeight="280"
                        SnapsToDevicePixels="True"
                        UseLayoutRounding="True"
                        RenderOptions.BitmapScalingMode="NearestNeighbor"

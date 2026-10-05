@@ -7,7 +7,7 @@ using SGReader.Helpers;
 
 namespace SGReader
 {
-    public class SGAnimationViewModel : ObservableObject
+    public partial class SGAnimationViewModel : ObservableObject
     {
         private readonly SGAnimation _animation;
         private IReadOnlyList<SGImageViewModel> _sprites;
@@ -26,6 +26,9 @@ namespace SGReader
         public string TypeLabel { get; }
 
         public bool IsReversible { get; }
+
+        [ObservableProperty]
+        private bool _isSelected;
 
         public SGAnimationViewModel(SGAnimation animation)
         {

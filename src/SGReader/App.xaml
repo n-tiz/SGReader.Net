@@ -82,29 +82,34 @@
                 </Setter>
             </Style>
 
-            <Style x:Key="SpriteCardItem" TargetType="ListBoxItem">
+            <Style x:Key="SpriteCardButton" TargetType="Button">
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="Margin" Value="0,0,12,12" />
+                <Setter Property="Background" Value="{StaticResource AppCardBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource AppDividerBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="Cursor" Value="Hand" />
                 <Setter Property="Template">
                     <Setter.Value>
-                        <ControlTemplate TargetType="ListBoxItem">
+                        <ControlTemplate TargetType="Button">
                             <Border x:Name="Card"
-                                    Background="{StaticResource AppCardBrush}"
-                                    BorderBrush="{StaticResource AppDividerBrush}"
-                                    BorderThickness="1"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
                                     CornerRadius="12"
-                                    Padding="10">
+                                    Padding="10"
+                                    SnapsToDevicePixels="True">
                                 <ContentPresenter />
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="Card" Property="Background" Value="{StaticResource AppCardHoverBrush}" />
                                 </Trigger>
-                                <Trigger Property="IsSelected" Value="True">
+                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                     <Setter TargetName="Card" Property="Background" Value="{StaticResource AppCardSelectedBrush}" />
                                     <Setter TargetName="Card" Property="BorderBrush" Value="#55FFFFFF" />
-                                </Trigger>
+                                </DataTrigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>

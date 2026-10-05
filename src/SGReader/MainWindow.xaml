@@ -89,6 +89,13 @@
                         </StackPanel>
                     </DockPanel>
 
+                    <ui:TextBox DockPanel.Dock="Top"
+                                Margin="0,0,0,12"
+                                PlaceholderText="Filter files or animations…"
+                                ClearButtonEnabled="True"
+                                Text="{Binding FileSearch, UpdateSourceTrigger=PropertyChanged}"
+                                Icon="{ui:SymbolIcon Symbol=Search24}" />
+
                     <TextBlock DockPanel.Dock="Bottom"
                                Margin="4,12,4,0"
                                FontSize="12"
@@ -125,7 +132,7 @@
                                        Command="{Binding OpenCommand}" />
                         </StackPanel>
 
-                        <ListBox ItemsSource="{Binding LoadedFiles}"
+                        <ListBox ItemsSource="{Binding FilteredFiles}"
                                  SelectedItem="{Binding SelectedSGFile}"
                                  Background="Transparent"
                                  BorderThickness="0"

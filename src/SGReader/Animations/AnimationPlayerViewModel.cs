@@ -55,13 +55,11 @@ namespace SGReader.Animations
 
         public string StatusLabel => Animation == null
             ? "Select an animation"
-            : IsPlaying
-                ? (Animation.IsReversible ? "Playing · reversible" : "Playing")
-                : "Paused";
+            : IsPlaying ? "Playing" : "Paused";
 
         partial void OnAnimationChanged(SGAnimationViewModel value)
         {
-            _playbackSprites = BuildPlaybackSprites(value);
+            _playbackSprites = value?.Sprites ?? Array.Empty<SGImageViewModel>();
             _frameIndex = 0;
             _start = DateTime.Now;
             CurrentBitmap = _playbackSprites.Count > 0 ? _playbackSprites[0]?.Bitmap : null;
@@ -109,22 +107,6 @@ namespace SGReader.Animations
         {
             OnPropertyChanged(nameof(StatusLabel));
             SaveFrameCommand.NotifyCanExecuteChanged();
-        }
-
-        private static IReadOnlyList<SGImageViewModel> BuildPlaybackSprites(SGAnimationViewModel animation)
-        {
-            if (animation == null)
-                return Array.Empty<SGImageViewModel>();
-
-            var sprites = animation.Sprites;
-            if (!animation.IsReversible || sprites.Count <= 2)
-                return sprites;
-
-            var playback = new List<SGImageViewModel>(sprites.Count * 2 - 2);
-            playback.AddRange(sprites);
-            for (int i = sprites.Count - 2; i >= 1; i--)
-                playback.Add(sprites[i]);
-            return playback;
         }
 
         public void Dispose()

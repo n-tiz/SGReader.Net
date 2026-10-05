@@ -50,7 +50,8 @@
                 </StackPanel>
             </StackPanel>
 
-            <ScrollViewer Grid.Row="1"
+            <ScrollViewer x:Name="GalleryScrollViewer"
+                          Grid.Row="1"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Padding="0,0,8,0">
@@ -71,53 +72,54 @@
                                                VerticalAlignment="Center" />
                                 </DockPanel>
 
-                                <ListBox BorderThickness="0"
-                                         Background="Transparent"
-                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                         SelectedItem="{Binding DataContext.SelectedAnimation, ElementName=Root}"
-                                         ItemsSource="{Binding Animations}"
-                                         ItemContainerStyle="{StaticResource SpriteCardItem}">
-                                    <ListBox.ItemsPanel>
+                                <ItemsControl ItemsSource="{Binding Animations}">
+                                    <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <controls:VirtualizingWrapPanel />
                                         </ItemsPanelTemplate>
-                                    </ListBox.ItemsPanel>
-                                    <ListBox.ItemTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type local:SGAnimationViewModel}">
-                                            <StackPanel Width="122" ToolTip="{Binding FullDescription}">
-                                                <Border Height="100"
-                                                        CornerRadius="8"
-                                                        Background="{StaticResource CheckerBrush}"
-                                                        ClipToBounds="True">
-                                                    <Image Source="{Binding Preview.Bitmap}"
-                                                           Stretch="Uniform"
-                                                           Margin="8"
-                                                           SnapsToDevicePixels="True"
-                                                           UseLayoutRounding="True"
-                                                           RenderOptions.BitmapScalingMode="NearestNeighbor"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center" />
-                                                </Border>
-                                                <TextBlock Margin="0,8,0,0"
-                                                           Text="{Binding Title}"
-                                                           FontWeight="SemiBold"
-                                                           FontSize="12"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           HorizontalAlignment="Center" />
-                                                <TextBlock Text="{Binding Description}"
-                                                           FontSize="11"
-                                                           Foreground="{StaticResource AppSubtleTextBrush}"
-                                                           HorizontalAlignment="Center" />
-                                                <TextBlock Text="{Binding TypeLabel}"
-                                                           FontSize="10"
-                                                           Foreground="{StaticResource AppSubtleTextBrush}"
-                                                           Opacity="0.8"
-                                                           HorizontalAlignment="Center"
-                                                           TextTrimming="CharacterEllipsis" />
-                                            </StackPanel>
+                                            <Button Width="142"
+                                                    Style="{StaticResource SpriteCardButton}"
+                                                    ToolTip="{Binding FullDescription}"
+                                                    Command="{Binding DataContext.SelectAnimationCommand, ElementName=Root}"
+                                                    CommandParameter="{Binding}">
+                                                <StackPanel Width="122">
+                                                    <Border Height="100"
+                                                            CornerRadius="8"
+                                                            Background="{StaticResource CheckerBrush}"
+                                                            ClipToBounds="True">
+                                                        <Image Source="{Binding Preview.Bitmap}"
+                                                               Stretch="Uniform"
+                                                               Margin="8"
+                                                               SnapsToDevicePixels="True"
+                                                               UseLayoutRounding="True"
+                                                               RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <TextBlock Margin="0,8,0,0"
+                                                               Text="{Binding Title}"
+                                                               FontWeight="SemiBold"
+                                                               FontSize="12"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               HorizontalAlignment="Center" />
+                                                    <TextBlock Text="{Binding Description}"
+                                                               FontSize="11"
+                                                               Foreground="{StaticResource AppSubtleTextBrush}"
+                                                               HorizontalAlignment="Center" />
+                                                    <TextBlock Text="{Binding TypeLabel}"
+                                                               FontSize="10"
+                                                               Foreground="{StaticResource AppSubtleTextBrush}"
+                                                               Opacity="0.8"
+                                                               HorizontalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </Button>
                                         </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -130,7 +132,8 @@
                 Background="{StaticResource AppInspectorBrush}"
                 BorderBrush="{StaticResource AppDividerBrush}"
                 BorderThickness="1,0,0,0">
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
+            <ScrollViewer x:Name="InspectorScrollViewer"
+                          VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Padding="16,14,16,16">
                 <StackPanel>
